@@ -52,6 +52,7 @@ export const PerformanceReport = () => {
   const [selectedAgent, setSelectedAgent] = useState<AgentPerformance | null>(null);
   const [agentDailyNotes, setAgentDailyNotes] = useState<DailyNote[]>([]);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [dialogSelectedMonth, setDialogSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const { toast } = useToast();
 
   // Fetch panchayaths on component mount
@@ -295,9 +296,10 @@ export const PerformanceReport = () => {
     }
   };
 
-  const fetchAgentDailyNotes = async (agent: AgentPerformance) => {
+  const fetchAgentDailyNotes = async (agent: AgentPerformance, monthOverride?: string) => {
     try {
-      const startOfMonth = new Date(selectedMonth + '-01');
+      const monthToUse = monthOverride || dialogSelectedMonth;
+      const startOfMonth = new Date(monthToUse + '-01');
       const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
       
       const { data: notes, error } = await supabase
@@ -323,8 +325,9 @@ export const PerformanceReport = () => {
     }
   };
 
-  const generateCalendarDays = () => {
-    const startOfMonth = new Date(selectedMonth + '-01');
+  const generateCalendarDays = (monthOverride?: string) => {
+    const monthToUse = monthOverride || dialogSelectedMonth;
+    const startOfMonth = new Date(monthToUse + '-01');
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
     const days = [];
     
@@ -537,7 +540,10 @@ export const PerformanceReport = () => {
                                            <Button
                                              variant="outline"
                                              size="sm"
-                                             onClick={() => fetchAgentDailyNotes(agent)}
+                                             onClick={() => {
+                                               setDialogSelectedMonth(new Date().toISOString().slice(0, 7));
+                                               fetchAgentDailyNotes(agent);
+                                             }}
                                              className="flex items-center gap-1 h-8"
                                            >
                                              <Calendar className="h-3 w-3" />
@@ -575,13 +581,33 @@ export const PerformanceReport = () => {
           
           {selectedAgent && (
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                {selectedAgent.agent_type.charAt(0).toUpperCase() + selectedAgent.agent_type.slice(1)} • 
-                {selectedAgent.mobile_number} • 
-                {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long' 
-                })}
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {selectedAgent.agent_type.charAt(0).toUpperCase() + selectedAgent.agent_type.slice(1)} • 
+                  {selectedAgent.mobile_number}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Month:</label>
+                  <Select 
+                    value={dialogSelectedMonth} 
+                    onValueChange={(value) => {
+                      setDialogSelectedMonth(value);
+                      fetchAgentDailyNotes(selectedAgent, value);
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateMonthOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <div className="grid grid-cols-7 gap-2">
@@ -592,8 +618,8 @@ export const PerformanceReport = () => {
                   </div>
                 ))}
                 
-                {/* Calendar Days */}
-                {generateCalendarDays().map(dateStr => {
+                 {/* Calendar Days */}
+                 {generateCalendarDays(dialogSelectedMonth).map(dateStr => {
                   const note = agentDailyNotes.find(note => note.date === dateStr);
                   const date = new Date(dateStr);
                   const dayOfWeek = date.getDay();
