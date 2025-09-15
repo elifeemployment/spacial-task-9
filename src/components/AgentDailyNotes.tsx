@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, FileText, User, Phone } from "lucide-react";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, FileText, User, Phone, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,23 +38,28 @@ export const AgentDailyNotes = ({
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedNote, setSelectedNote] = useState<DailyNote | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const { toast } = useToast();
 
   useEffect(() => {
     if (open && agentMobile) {
       fetchAgentNotes();
     }
-  }, [open, agentMobile]);
+  }, [open, agentMobile, selectedMonth]);
 
   const fetchAgentNotes = async () => {
     setLoading(true);
     try {
+      const startDate = startOfMonth(selectedMonth);
+      const endDate = endOfMonth(selectedMonth);
+      
       const { data, error } = await supabase
         .from('daily_notes')
         .select('*')
         .eq('mobile_number', agentMobile)
-        .order('date', { ascending: false })
-        .limit(90); // Show last 90 days for better calendar view
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'))
+        .order('date', { ascending: false });
 
       if (error) throw error;
       setNotes(data || []);
@@ -192,6 +198,71 @@ export const AgentDailyNotes = ({
             </CardHeader>
           </Card>
 
+          {/* Month Selection */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>Select Month</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium min-w-[120px] text-center">
+                    {format(selectedMonth, 'MMMM yyyy')}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                <Select
+                  value={selectedMonth.getMonth().toString()}
+                  onValueChange={(value) => setSelectedMonth(new Date(selectedMonth.getFullYear(), parseInt(value)))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {format(new Date(2024, i), 'MMMM')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={selectedMonth.getFullYear().toString()}
+                  onValueChange={(value) => setSelectedMonth(new Date(parseInt(value), selectedMonth.getMonth()))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - 2 + i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Activity Stats */}
           <div className="grid grid-cols-4 gap-4">
             <Card>
@@ -236,7 +307,7 @@ export const AgentDailyNotes = ({
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Daily Notes Calendar (Last 90 days)
+                  Daily Notes Calendar - {format(selectedMonth, 'MMMM yyyy')}
                 </CardTitle>
                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
                    <div className="flex items-center gap-1">
