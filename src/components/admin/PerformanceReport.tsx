@@ -525,21 +525,26 @@ export const PerformanceReport = () => {
                                           {agent.consecutive_leave_days}
                                         </span>
                                       </TableCell>
-                                      <TableCell>
-                                        {agent.last_activity_date ? (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => fetchAgentDailyNotes(agent)}
-                                            className="flex items-center gap-1 p-1 h-auto"
-                                          >
-                                            <Calendar className="h-3 w-3" />
-                                            {new Date(agent.last_activity_date).toLocaleDateString()}
-                                          </Button>
-                                        ) : (
-                                          <span className="text-muted-foreground">No activity</span>
-                                        )}
-                                      </TableCell>
+                                       <TableCell>
+                                         <div className="flex items-center gap-2">
+                                           {agent.last_activity_date ? (
+                                             <span className="text-sm">
+                                               {new Date(agent.last_activity_date).toLocaleDateString()}
+                                             </span>
+                                           ) : (
+                                             <span className="text-muted-foreground text-sm">No activity</span>
+                                           )}
+                                           <Button
+                                             variant="outline"
+                                             size="sm"
+                                             onClick={() => fetchAgentDailyNotes(agent)}
+                                             className="flex items-center gap-1 h-8"
+                                           >
+                                             <Calendar className="h-3 w-3" />
+                                             View Calendar
+                                           </Button>
+                                         </div>
+                                       </TableCell>
                                       <TableCell>{agent.total_notes}</TableCell>
                                     </TableRow>
                                   ))}
