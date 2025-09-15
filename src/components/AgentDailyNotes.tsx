@@ -83,12 +83,15 @@ export const AgentDailyNotes = ({
 
   const isOnLeave = (date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
-    return notes.some(note => note.date === dateString && note.is_leave);
+    const note = notes.find(note => note.date === dateString);
+    // Mark as leave if: 1) explicitly marked as leave, OR 2) no note exists for this date
+    return !note || note.is_leave;
   };
 
   const hasNoActivity = (date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
     const note = notes.find(note => note.date === dateString);
+    // Only show as "no activity" if note exists, not on leave, but no activity recorded
     return note && !note.is_leave && (!note.activity || note.activity.trim() === '');
   };
 
@@ -106,41 +109,41 @@ export const AgentDailyNotes = ({
   }, [selectedDate, notes]);
 
   const getActivityStats = () => {
-    const totalDays = notes.length;
+    const startDate = startOfMonth(selectedMonth);
+    const endDate = endOfMonth(selectedMonth);
+    
+    // Generate all dates in the selected month
+    const allDatesInMonth = [];
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      allDatesInMonth.push(format(currentDate, 'yyyy-MM-dd'));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    const totalDays = allDatesInMonth.length;
     const activeDays = notes.filter(note => !note.is_leave && note.activity && note.activity.trim() !== '').length;
-    const leaveDays = notes.filter(note => note.is_leave).length;
     const noActivityDays = notes.filter(note => !note.is_leave && (!note.activity || note.activity.trim() === '')).length;
     
-    // Calculate inactive days (3+ consecutive leave/no activity days)
-    const inactiveDays = calculateInactiveDays();
+    // Calculate leave days: explicitly marked as leave + days without any notes
+    const daysWithNotes = notes.map(note => note.date);
+    const daysWithoutNotes = allDatesInMonth.filter(date => !daysWithNotes.includes(date));
+    const explicitLeaveDays = notes.filter(note => note.is_leave).length;
+    const leaveDays = explicitLeaveDays + daysWithoutNotes.length;
     
-    return { totalDays, activeDays, leaveDays: leaveDays + noActivityDays, inactiveDays };
+    // Calculate inactive days (3+ consecutive leave/no activity days)
+    const inactiveDays = calculateInactiveDays(allDatesInMonth);
+    
+    return { totalDays, activeDays, leaveDays, noActivityDays, inactiveDays };
   };
 
-  const calculateInactiveDays = () => {
-    if (notes.length === 0) return 0;
-    
-    // Sort notes by date to check for consecutive days
-    const sortedNotes = [...notes].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // Generate all dates to check for gaps
-    const allDates: string[] = [];
-    if (sortedNotes.length > 0) {
-      const startDate = new Date(sortedNotes[0].date);
-      const endDate = new Date(sortedNotes[sortedNotes.length - 1].date);
-      const currentDate = new Date(startDate);
-      
-      while (currentDate <= endDate) {
-        allDates.push(format(currentDate, 'yyyy-MM-dd'));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-    }
+  const calculateInactiveDays = (allDatesInMonth: string[]) => {
+    if (allDatesInMonth.length === 0) return 0;
     
     let inactiveDays = 0;
     let consecutiveInactiveDays = 0;
     
-    for (const dateStr of allDates) {
-      const note = sortedNotes.find(n => n.date === dateStr);
+    for (const dateStr of allDatesInMonth) {
+      const note = notes.find(n => n.date === dateStr);
       const isInactiveDay = !note || note.is_leave || !note.activity || note.activity.trim() === '';
       
       if (isInactiveDay) {
@@ -150,10 +153,7 @@ export const AgentDailyNotes = ({
           inactiveDays++;
         }
       } else {
-        // Reset counter on active day, but don't add previous days if less than 3
-        if (consecutiveInactiveDays >= 3) {
-          // We were in an inactive period, it ended
-        }
+        // Reset counter on active day
         consecutiveInactiveDays = 0;
       }
     }
@@ -285,16 +285,15 @@ export const AgentDailyNotes = ({
               <CardContent className="pt-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">{stats.leaveDays}</div>
-                  <div className="text-sm text-muted-foreground">Leave Days</div>
+                  <div className="text-sm text-muted-foreground">Leave/No Entry</div>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{stats.inactiveDays}</div>
-                  <div className="text-sm text-muted-foreground">Inactive Days</div>
-                  <div className="text-xs text-muted-foreground mt-1">(3+ consecutive leave)</div>
+                  <div className="text-2xl font-bold text-orange-600">{stats.noActivityDays}</div>
+                  <div className="text-sm text-muted-foreground">No Activity</div>
                 </div>
               </CardContent>
             </Card>
@@ -316,15 +315,11 @@ export const AgentDailyNotes = ({
                    </div>
                    <div className="flex items-center gap-1">
                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                     <span>On Leave</span>
+                     <span>Leave/No Entry</span>
                    </div>
                    <div className="flex items-center gap-1">
                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                      <span>No Activity</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                     <div className="w-3 h-3 bg-muted rounded-full"></div>
-                     <span>No Data</span>
                    </div>
                  </div>
               </CardHeader>
