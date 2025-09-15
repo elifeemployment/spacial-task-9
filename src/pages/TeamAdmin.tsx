@@ -8,6 +8,7 @@ import { AgentTestimonialAnalytics } from "@/components/admin/AgentTestimonialAn
 import { PerformanceReport } from "@/components/admin/PerformanceReport";
 import { TodoList } from "@/components/admin/TodoList";
 import { ArrowLeft, Shield, Settings, BarChart3, MapPin, Users, MessageSquare, TrendingDown, ListTodo } from "lucide-react";
+import { DailyNoteCard } from "@/components/DailyNoteCard";
 import { useNavigate } from "react-router-dom";
 import { User } from "@/lib/authService";
 const TeamAdmin = () => {
@@ -41,6 +42,13 @@ const TeamAdmin = () => {
             </div>
           </div>
         </div>
+
+        {/* Daily Notes for Team Members */}
+        {currentUser && (
+          <div className="mb-6">
+            <DailyNoteCard currentUser={currentUser} />
+          </div>
+        )}
 
         {/* Admin Navigation Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">

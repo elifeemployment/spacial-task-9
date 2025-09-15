@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MobileLogin } from "@/components/MobileLogin";
 import { UserProfile } from "@/components/UserProfile";
-import { DailyNote } from "@/components/DailyNote";
+import { DailyNoteCard } from "@/components/DailyNoteCard";
 import { CoordinatorReports } from "@/components/CoordinatorReports";
 import { MyTasks } from "@/components/admin/MyTasks";
 import { PanchayathManagement } from "@/components/admin/PanchayathManagement";
@@ -79,7 +79,7 @@ const Index = () => {
 
         {/* Daily Note Feature */}
         <div className="mb-6">
-          <DailyNote currentUser={currentUser} />
+          <DailyNoteCard currentUser={currentUser} />
         </div>
 
 
