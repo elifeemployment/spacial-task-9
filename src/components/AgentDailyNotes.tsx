@@ -77,7 +77,13 @@ export const AgentDailyNotes = ({
 
   const isOnLeave = (date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
-    return notes.some(note => note.date === dateString && (note.is_leave || !note.activity));
+    return notes.some(note => note.date === dateString && note.is_leave);
+  };
+
+  const hasNoActivity = (date: Date) => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    const note = notes.find(note => note.date === dateString);
+    return note && !note.is_leave && (!note.activity || note.activity.trim() === '');
   };
 
   const getNoteForDate = (date: Date) => {
@@ -95,13 +101,14 @@ export const AgentDailyNotes = ({
 
   const getActivityStats = () => {
     const totalDays = notes.length;
-    const activeDays = notes.filter(note => !note.is_leave && note.activity).length;
-    const leaveDays = notes.filter(note => note.is_leave || !note.activity).length;
+    const activeDays = notes.filter(note => !note.is_leave && note.activity && note.activity.trim() !== '').length;
+    const leaveDays = notes.filter(note => note.is_leave).length;
+    const noActivityDays = notes.filter(note => !note.is_leave && (!note.activity || note.activity.trim() === '')).length;
     
-    // Calculate inactive days (3+ consecutive leave days)
+    // Calculate inactive days (3+ consecutive leave/no activity days)
     const inactiveDays = calculateInactiveDays();
     
-    return { totalDays, activeDays, leaveDays, inactiveDays };
+    return { totalDays, activeDays, leaveDays: leaveDays + noActivityDays, inactiveDays };
   };
 
   const calculateInactiveDays = () => {
@@ -110,30 +117,38 @@ export const AgentDailyNotes = ({
     // Sort notes by date to check for consecutive days
     const sortedNotes = [...notes].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    let inactiveDays = 0;
-    let consecutiveLeaveDays = 0;
-    let isCurrentlyInactive = false;
-    
-    for (let i = 0; i < sortedNotes.length; i++) {
-      const note = sortedNotes[i];
-      const isLeaveDay = note.is_leave || !note.activity;
+    // Generate all dates to check for gaps
+    const allDates: string[] = [];
+    if (sortedNotes.length > 0) {
+      const startDate = new Date(sortedNotes[0].date);
+      const endDate = new Date(sortedNotes[sortedNotes.length - 1].date);
+      const currentDate = new Date(startDate);
       
-      if (isLeaveDay) {
-        consecutiveLeaveDays++;
-        
-        // If we reach 3 consecutive leave days and not already counting as inactive
-        if (consecutiveLeaveDays >= 3 && !isCurrentlyInactive) {
-          isCurrentlyInactive = true;
-          // Count all the consecutive leave days as inactive
-          inactiveDays += consecutiveLeaveDays;
-        } else if (isCurrentlyInactive) {
-          // Continue counting if already in inactive period
+      while (currentDate <= endDate) {
+        allDates.push(format(currentDate, 'yyyy-MM-dd'));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    
+    let inactiveDays = 0;
+    let consecutiveInactiveDays = 0;
+    
+    for (const dateStr of allDates) {
+      const note = sortedNotes.find(n => n.date === dateStr);
+      const isInactiveDay = !note || note.is_leave || !note.activity || note.activity.trim() === '';
+      
+      if (isInactiveDay) {
+        consecutiveInactiveDays++;
+        // Only count as inactive if we have 3+ consecutive days
+        if (consecutiveInactiveDays >= 3) {
           inactiveDays++;
         }
       } else {
-        // Reset on active day
-        consecutiveLeaveDays = 0;
-        isCurrentlyInactive = false;
+        // Reset counter on active day, but don't add previous days if less than 3
+        if (consecutiveInactiveDays >= 3) {
+          // We were in an inactive period, it ended
+        }
+        consecutiveInactiveDays = 0;
       }
     }
     
@@ -223,20 +238,24 @@ export const AgentDailyNotes = ({
                   <CalendarIcon className="h-4 w-4" />
                   Daily Notes Calendar (Last 90 days)
                 </CardTitle>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span>Active</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span>Leave/No Activity</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-muted rounded-full"></div>
-                    <span>No Data</span>
-                  </div>
-                </div>
+                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                   <div className="flex items-center gap-1">
+                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                     <span>Active</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                     <span>On Leave</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                     <span>No Activity</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <div className="w-3 h-3 bg-muted rounded-full"></div>
+                     <span>No Data</span>
+                   </div>
+                 </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -252,10 +271,12 @@ export const AgentDailyNotes = ({
                     modifiers={{
                       hasActivity: (date) => hasActivity(date),
                       onLeave: (date) => isOnLeave(date),
+                      noActivity: (date) => hasNoActivity(date),
                     }}
                     modifiersClassNames={{
                       hasActivity: "bg-green-500 text-white hover:bg-green-600",
                       onLeave: "bg-red-500 text-white hover:bg-red-600",
+                      noActivity: "bg-orange-500 text-white hover:bg-orange-600",
                     }}
                   />
                 )}
@@ -276,16 +297,22 @@ export const AgentDailyNotes = ({
                   </div>
                 ) : selectedNote ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant={selectedNote.is_leave || !selectedNote.activity ? "destructive" : "default"}
-                      >
-                        {selectedNote.is_leave || !selectedNote.activity ? "Leave" : "Active"}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        Updated: {format(new Date(selectedNote.updated_at), 'HH:mm')}
-                      </span>
-                    </div>
+                     <div className="flex items-center gap-2">
+                       <Badge 
+                         variant={
+                           selectedNote.is_leave ? "destructive" : 
+                           !selectedNote.activity || selectedNote.activity.trim() === '' ? "secondary" : 
+                           "default"
+                         }
+                       >
+                         {selectedNote.is_leave ? "On Leave" : 
+                          !selectedNote.activity || selectedNote.activity.trim() === '' ? "No Activity" : 
+                          "Active"}
+                       </Badge>
+                       <span className="text-sm text-muted-foreground">
+                         Updated: {format(new Date(selectedNote.updated_at), 'HH:mm')}
+                       </span>
+                     </div>
                     
                     {selectedNote.activity ? (
                       <div className="space-y-2">
