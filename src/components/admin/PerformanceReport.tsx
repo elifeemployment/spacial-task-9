@@ -4,8 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Activity, AlertTriangle, Users, TrendingDown, ChevronDown, ChevronRight } from "lucide-react";
+import { Activity, AlertTriangle, Users, TrendingDown, ChevronDown, ChevronRight, Calendar, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Panchayath {
@@ -30,6 +32,12 @@ interface PerformanceStats {
   inactive_percentage: number;
 }
 
+interface DailyNote {
+  date: string;
+  is_leave: boolean;
+  activity: string;
+}
+
 export const PerformanceReport = () => {
   const [panchayaths, setPanchayaths] = useState<Panchayath[]>([]);
   const [selectedPanchayath, setSelectedPanchayath] = useState<string>("");
@@ -41,6 +49,9 @@ export const PerformanceReport = () => {
     inactive_percentage: 0
   });
   const [loading, setLoading] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentPerformance | null>(null);
+  const [agentDailyNotes, setAgentDailyNotes] = useState<DailyNote[]>([]);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch panchayaths on component mount
@@ -284,6 +295,48 @@ export const PerformanceReport = () => {
     }
   };
 
+  const fetchAgentDailyNotes = async (agent: AgentPerformance) => {
+    try {
+      const startOfMonth = new Date(selectedMonth + '-01');
+      const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
+      
+      const { data: notes, error } = await supabase
+        .from('daily_notes')
+        .select('date, is_leave, activity')
+        .eq('mobile_number', agent.mobile_number)
+        .gte('date', startOfMonth.toISOString().split('T')[0])
+        .lte('date', endOfMonth.toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      setAgentDailyNotes(notes || []);
+      setSelectedAgent(agent);
+      setNotesDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching agent daily notes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch daily notes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const generateCalendarDays = () => {
+    const startOfMonth = new Date(selectedMonth + '-01');
+    const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
+    const days = [];
+    
+    const currentDate = new Date(startOfMonth);
+    while (currentDate <= endOfMonth) {
+      days.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return days;
+  };
+
   const getStatusBadge = (agent: AgentPerformance) => {
     if (agent.is_inactive) {
       return <Badge variant="destructive" className="flex items-center gap-1">
@@ -473,10 +526,19 @@ export const PerformanceReport = () => {
                                         </span>
                                       </TableCell>
                                       <TableCell>
-                                        {agent.last_activity_date 
-                                          ? new Date(agent.last_activity_date).toLocaleDateString()
-                                          : "No activity"
-                                        }
+                                        {agent.last_activity_date ? (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => fetchAgentDailyNotes(agent)}
+                                            className="flex items-center gap-1 p-1 h-auto"
+                                          >
+                                            <Calendar className="h-3 w-3" />
+                                            {new Date(agent.last_activity_date).toLocaleDateString()}
+                                          </Button>
+                                        ) : (
+                                          <span className="text-muted-foreground">No activity</span>
+                                        )}
                                       </TableCell>
                                       <TableCell>{agent.total_notes}</TableCell>
                                     </TableRow>
@@ -495,6 +557,109 @@ export const PerformanceReport = () => {
           </div>
         )}
       </CardContent>
+
+      {/* Daily Notes History Dialog */}
+      <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Daily Notes History - {selectedAgent?.agent_name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedAgent && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {selectedAgent.agent_type.charAt(0).toUpperCase() + selectedAgent.agent_type.slice(1)} • 
+                {selectedAgent.mobile_number} • 
+                {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long' 
+                })}
+              </div>
+              
+              <div className="grid grid-cols-7 gap-2">
+                {/* Calendar Header */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-center text-sm font-medium p-2 text-muted-foreground">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Calendar Days */}
+                {generateCalendarDays().map(dateStr => {
+                  const note = agentDailyNotes.find(note => note.date === dateStr);
+                  const date = new Date(dateStr);
+                  const dayOfWeek = date.getDay();
+                  const dayOfMonth = date.getDate();
+                  const isToday = dateStr === new Date().toISOString().split('T')[0];
+                  
+                  // Add empty cells for proper calendar alignment
+                  const emptyCells = [];
+                  if (dayOfMonth === 1) {
+                    for (let i = 0; i < dayOfWeek; i++) {
+                      emptyCells.push(<div key={`empty-${i}`} className="p-2"></div>);
+                    }
+                  }
+                  
+                  return (
+                    <div key={dateStr} className="contents">
+                      {emptyCells}
+                      <div className={`
+                        p-2 border rounded-lg text-center text-sm min-h-[80px] flex flex-col justify-between
+                        ${isToday ? 'border-primary bg-primary/5' : 'border-border'}
+                        ${note?.is_leave ? 'bg-destructive/10 border-destructive/20' : ''}
+                        ${note && !note.is_leave && note.activity ? 'bg-green-50 border-green-200' : ''}
+                      `}>
+                        <div className="font-medium">{dayOfMonth}</div>
+                        {note ? (
+                          <div className="space-y-1">
+                            {note.is_leave ? (
+                              <Badge variant="destructive" className="text-xs">Leave</Badge>
+                            ) : note.activity && note.activity.trim() ? (
+                              <Badge variant="default" className="text-xs">Active</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">No Activity</Badge>
+                            )}
+                            {note.activity && note.activity.trim() && !note.is_leave && (
+                              <div className="text-xs text-muted-foreground truncate" title={note.activity}>
+                                {note.activity.slice(0, 20)}{note.activity.length > 20 ? '...' : ''}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">No Data</Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Legend */}
+              <div className="flex flex-wrap gap-4 pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
+                  <span className="text-sm">Active Day</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-destructive/10 border border-destructive/20 rounded"></div>
+                  <span className="text-sm">Leave Day</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-background border border-border rounded"></div>
+                  <span className="text-sm">No Activity</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-primary/5 border border-primary rounded"></div>
+                  <span className="text-sm">Today</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
