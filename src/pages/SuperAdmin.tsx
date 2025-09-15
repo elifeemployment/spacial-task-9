@@ -18,7 +18,7 @@ const SuperAdmin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("user-management");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,24 +136,7 @@ const SuperAdmin = () => {
         </div>
 
         {/* Admin Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div 
-            className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "overview" ? "scale-[1.02]" : ""}`} 
-            onClick={() => setActiveTab("overview")}
-          >
-            <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${activeTab === "overview" ? "border-primary shadow-xl bg-primary/10" : "border-border hover:border-primary/50 hover:shadow-lg"}`}>
-              <CardHeader className="pb-3 bg-purple-50">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">System Overview</CardTitle>
-                </div>
-                <CardDescription>
-                  Monitor system health and statistics
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div 
             className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "user-management" ? "scale-[1.02]" : ""}`} 
             onClick={() => setActiveTab("user-management")}
@@ -172,23 +155,6 @@ const SuperAdmin = () => {
           </div>
 
           <div 
-            className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "database" ? "scale-[1.02]" : ""}`} 
-            onClick={() => setActiveTab("database")}
-          >
-            <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${activeTab === "database" ? "border-primary shadow-xl bg-primary/10" : "border-border hover:border-primary/50 hover:shadow-lg"}`}>
-              <CardHeader className="pb-3 bg-green-50">
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Database Admin</CardTitle>
-                </div>
-                <CardDescription>
-                  Direct database management
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-
-          <div 
             className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "testimonials" ? "scale-[1.02]" : ""}`} 
             onClick={() => setActiveTab("testimonials")}
           >
@@ -200,23 +166,6 @@ const SuperAdmin = () => {
                 </div>
                 <CardDescription>
                   Manage agent testimonial questions
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-
-          <div 
-            className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "system-settings" ? "scale-[1.02]" : ""}`} 
-            onClick={() => setActiveTab("system-settings")}
-          >
-            <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${activeTab === "system-settings" ? "border-primary shadow-xl bg-primary/10" : "border-border hover:border-primary/50 hover:shadow-lg"}`}>
-              <CardHeader className="pb-3 bg-orange-50">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">System Settings</CardTitle>
-                </div>
-                <CardDescription>
-                  Configure system parameters
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -275,64 +224,6 @@ const SuperAdmin = () => {
             <TestimonialManagementSimple />
           </TabsContent>
           
-          <TabsContent value="database">
-            <Card>
-              <CardHeader>
-                <CardTitle>Database Administration</CardTitle>
-                <CardDescription>
-                  Direct database access and management tools
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Database administration tools coming soon...
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="system-settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Configuration</CardTitle>
-                <CardDescription>
-                  Configure system-wide settings and parameters
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">User Permissions</CardTitle>
-                        <CardDescription>
-                          Manage user roles and access controls
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground">
-                          Permissions management coming soon...
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">System Parameters</CardTitle>
-                        <CardDescription>
-                          Configure application-wide settings
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground">
-                          System parameters configuration coming soon...
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
