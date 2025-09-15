@@ -83,8 +83,13 @@ export const AgentDailyNotes = ({
 
   const isOnLeave = (date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
+    const today = format(new Date(), 'yyyy-MM-dd');
+    
+    // Don't mark future dates as leave
+    if (dateString > today) return false;
+    
     const note = notes.find(note => note.date === dateString);
-    // Mark as leave if: 1) explicitly marked as leave, OR 2) no note exists for this date
+    // Mark as leave if: 1) explicitly marked as leave, OR 2) no note exists for this past date
     return !note || note.is_leave;
   };
 
@@ -111,38 +116,40 @@ export const AgentDailyNotes = ({
   const getActivityStats = () => {
     const startDate = startOfMonth(selectedMonth);
     const endDate = endOfMonth(selectedMonth);
+    const today = new Date();
+    const todayString = format(today, 'yyyy-MM-dd');
     
-    // Generate all dates in the selected month
-    const allDatesInMonth = [];
+    // Generate all dates in the selected month up to today only
+    const allPastDatesInMonth = [];
     const currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      allDatesInMonth.push(format(currentDate, 'yyyy-MM-dd'));
+    while (currentDate <= endDate && currentDate <= today) {
+      allPastDatesInMonth.push(format(currentDate, 'yyyy-MM-dd'));
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    const totalDays = allDatesInMonth.length;
-    const activeDays = notes.filter(note => !note.is_leave && note.activity && note.activity.trim() !== '').length;
-    const noActivityDays = notes.filter(note => !note.is_leave && (!note.activity || note.activity.trim() === '')).length;
+    const totalDays = allPastDatesInMonth.length;
+    const activeDays = notes.filter(note => note.date <= todayString && !note.is_leave && note.activity && note.activity.trim() !== '').length;
+    const noActivityDays = notes.filter(note => note.date <= todayString && !note.is_leave && (!note.activity || note.activity.trim() === '')).length;
     
-    // Calculate leave days: explicitly marked as leave + days without any notes
+    // Calculate leave days: explicitly marked as leave + past days without any notes
     const daysWithNotes = notes.map(note => note.date);
-    const daysWithoutNotes = allDatesInMonth.filter(date => !daysWithNotes.includes(date));
-    const explicitLeaveDays = notes.filter(note => note.is_leave).length;
-    const leaveDays = explicitLeaveDays + daysWithoutNotes.length;
+    const pastDaysWithoutNotes = allPastDatesInMonth.filter(date => !daysWithNotes.includes(date));
+    const explicitLeaveDays = notes.filter(note => note.date <= todayString && note.is_leave).length;
+    const leaveDays = explicitLeaveDays + pastDaysWithoutNotes.length;
     
     // Calculate inactive days (3+ consecutive leave/no activity days)
-    const inactiveDays = calculateInactiveDays(allDatesInMonth);
+    const inactiveDays = calculateInactiveDays(allPastDatesInMonth);
     
     return { totalDays, activeDays, leaveDays, noActivityDays, inactiveDays };
   };
 
-  const calculateInactiveDays = (allDatesInMonth: string[]) => {
-    if (allDatesInMonth.length === 0) return 0;
+  const calculateInactiveDays = (allPastDatesInMonth: string[]) => {
+    if (allPastDatesInMonth.length === 0) return 0;
     
     let inactiveDays = 0;
     let consecutiveInactiveDays = 0;
     
-    for (const dateStr of allDatesInMonth) {
+    for (const dateStr of allPastDatesInMonth) {
       const note = notes.find(n => n.date === dateStr);
       const isInactiveDay = !note || note.is_leave || !note.activity || note.activity.trim() === '';
       
