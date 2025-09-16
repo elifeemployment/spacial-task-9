@@ -75,7 +75,7 @@ export const TaskManagement = ({ currentUser }: TaskManagementProps) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full bg-supervisor"></div>
-                    Select Panchayath to Manage Agents
+                    Select Panchayath (പഞ്ചായത്ത് തിരഞ്ഞെടുക്കുക )
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
