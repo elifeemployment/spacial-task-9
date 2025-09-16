@@ -516,7 +516,7 @@ export const MyTasks = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            Your Assigned Tasks
+            Your Assigned Tasks (നിങ്ങൾക്കുള്ള പ്രതേക ജോലികൾ )
           </CardTitle>
         </CardHeader>
         <CardContent>
