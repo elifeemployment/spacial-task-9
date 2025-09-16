@@ -139,7 +139,7 @@ export const DailyNote = ({
         <CardTitle className="flex items-center justify-between text-lg font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-500" />
-            Daily Notes ()
+            Daily Notes
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">{currentUser.name}</span>
