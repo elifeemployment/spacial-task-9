@@ -30,7 +30,7 @@ export const DailyNoteCard = ({ currentUser }: DailyNoteCardProps) => {
             </div>
             <div>
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Daily Notes ()
+                Daily Notes (ഇന്ന് നിങ്ങൾ എന്ത് ചെയ്തു? ഒന്നും ചെയ്യാത്ത ദിവസ്സം ലീവ് ആയി കണക്കാക്കും )
               </span>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                 <Calendar className="h-3 w-3" />
