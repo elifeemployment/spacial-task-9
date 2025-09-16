@@ -58,7 +58,7 @@ export const TaskManagement = ({ currentUser }: TaskManagementProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
                 <Plus className="h-4 w-4" />
-                Add Agents
+                Add Agents (പുതുതായി ഏജന്റുമാരെ ചേർക്കുക)
                 {isAddAgentsOpen ? (
                   <ChevronDown className="h-4 w-4 ml-auto" />
                 ) : (
