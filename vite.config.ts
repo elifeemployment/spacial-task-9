@@ -12,9 +12,6 @@ export default defineConfig(({ mode }) => ({
       port: 24678,
     },
   },
-  define: {
-    __WS_TOKEN__: JSON.stringify(process.env.WS_TOKEN || ''),
-  },
   plugins: [
     react(),
     mode === 'development' &&
