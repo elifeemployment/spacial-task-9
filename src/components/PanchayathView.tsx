@@ -107,7 +107,20 @@ export const PanchayathView = () => {
             .maybeSingle();
           console.log(`Coordinator query result:`, { data, error, searching_for: { panchayath_id: panchayathData.id, ward: row.coordinator_ward } });
           if (error) throw error;
-          record = data;
+          
+          // If no existing coordinator found, create a new record structure for editing
+          if (!data) {
+            record = {
+              id: null, // No existing ID - this will be treated as a new coordinator
+              name: row.coordinator_name,
+              mobile_number: row.coordinator_mobile,
+              ward: row.coordinator_ward,
+              rating: row.coordinator_rating,
+              panchayath_id: panchayathData.id
+            };
+          } else {
+            record = data;
+          }
           break;
         }
         case "supervisor": {
