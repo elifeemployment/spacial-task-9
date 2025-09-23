@@ -87,7 +87,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
-          mobile_number: string
+          mobile: string
           name: string
           panchayath_id: string
           rating: number | null
@@ -98,7 +98,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
-          mobile_number: string
+          mobile: string
           name: string
           panchayath_id: string
           rating?: number | null
@@ -109,7 +109,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
-          mobile_number?: string
+          mobile?: string
           name?: string
           panchayath_id?: string
           rating?: number | null
