@@ -104,9 +104,13 @@ export const PanchayathView = () => {
             .select("id, name, mobile_number, ward, rating, panchayath_id")
             .eq("panchayath_id", panchayathData.id)
             .eq("ward", row.coordinator_ward)
-            .single();
+            .maybeSingle();
           console.log(`Coordinator query result:`, { data, error, searching_for: { panchayath_id: panchayathData.id, ward: row.coordinator_ward } });
           if (error) throw error;
+          if (!data) {
+            console.warn(`Coordinator not found for panchayath ${row.panchayath_name}, ward ${row.coordinator_ward}`);
+            return;
+          }
           record = data;
           break;
         }
@@ -128,9 +132,13 @@ export const PanchayathView = () => {
             .select("id, name, mobile_number, coordinator_id, panchayath_id")
             .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.supervisor_mobile))
-            .single();
+            .maybeSingle();
           console.log(`Supervisor query result:`, { data, error, searching_for: { mobile: String(row.supervisor_mobile), panchayath_id: panchayathData.id } });
           if (error) throw error;
+          if (!data) {
+            console.warn(`Supervisor not found for panchayath ${row.panchayath_name}, mobile ${row.supervisor_mobile}`);
+            return;
+          }
           record = data;
           break;
         }
@@ -153,9 +161,13 @@ export const PanchayathView = () => {
             .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.group_leader_mobile))
             .eq("ward", row.group_leader_ward)
-            .single();
+            .maybeSingle();
           console.log(`Group leader query result:`, { data, error, searching_for: { mobile: String(row.group_leader_mobile), ward: row.group_leader_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
+          if (!data) {
+            console.warn(`Group leader not found for panchayath ${row.panchayath_name}, ward ${row.group_leader_ward}, mobile ${row.group_leader_mobile}`);
+            return;
+          }
           record = data;
           break;
         }
@@ -178,9 +190,13 @@ export const PanchayathView = () => {
             .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.pro_mobile))
             .eq("ward", row.pro_ward)
-            .single();
+            .maybeSingle();
           console.log(`Pro query result:`, { data, error, searching_for: { mobile: String(row.pro_mobile), ward: row.pro_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
+          if (!data) {
+            console.warn(`Pro not found for panchayath ${row.panchayath_name}, ward ${row.pro_ward}, mobile ${row.pro_mobile}`);
+            return;
+          }
           record = data;
           break;
         }
