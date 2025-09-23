@@ -37,6 +37,7 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   useEffect(() => {
     if (preSelectedPanchayath) {
       setPanchayathId(preSelectedPanchayath.id);
+      setSelectedPanchayath(preSelectedPanchayath);
     }
   }, [preSelectedPanchayath]);
 
@@ -87,6 +88,7 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   const fetchSupervisorsForWard = async (wardNum: number) => {
     if (!panchayathId) return;
     
+    console.log("Fetching supervisors for ward:", wardNum, "panchayath:", panchayathId);
     try {
       const { data, error } = await supabase
         .from("supervisors")
@@ -98,6 +100,7 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
         .eq("supervisor_wards.ward", wardNum);
 
       if (error) throw error;
+      console.log("Supervisors fetched:", data);
       setSupervisors(data || []);
     } catch (error) {
       console.error("Error fetching supervisors:", error);

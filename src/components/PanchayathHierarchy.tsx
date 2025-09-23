@@ -215,6 +215,12 @@ export const PanchayathHierarchy = () => {
     setShowAgentDialog(true);
   };
 
+  const handleAddNewAgent = () => {
+    setEditingAgent(null);
+    setShowAgentDialog(false);
+    setShowEditDialog(true);
+  };
+
   const handleEditAgent = (agent: Agent) => {
     setEditingAgent(agent);
     setShowAgentDialog(false);
@@ -494,6 +500,14 @@ export const PanchayathHierarchy = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">
+                {agents.length} {selectedAgentType === 'supervisor' ? 'Supervisor(s)' : 'Group Leader(s)'}
+              </h4>
+              <Button onClick={handleAddNewAgent} size="sm">
+                Add New {selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'}
+              </Button>
+            </div>
             {agents.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
                 No {selectedAgentType === 'supervisor' ? 'supervisors' : 'group leaders'} found
@@ -556,13 +570,13 @@ export const PanchayathHierarchy = () => {
 
       {/* Edit Agent Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Edit {selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'}
+              {editingAgent ? 'Edit' : 'Add'} {selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'}
             </DialogTitle>
           </DialogHeader>
-          {editingAgent && selectedPanchayathForAgents && (
+          {selectedPanchayathForAgents && (
             <>
               {selectedAgentType === 'supervisor' && (
                 <SupervisorForm

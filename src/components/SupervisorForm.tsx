@@ -38,6 +38,7 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
   useEffect(() => {
     if (preSelectedPanchayath) {
       setPanchayathId(preSelectedPanchayath.id);
+      setSelectedPanchayath(preSelectedPanchayath);
     }
   }, [preSelectedPanchayath]);
 
@@ -96,6 +97,7 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
   const fetchCoordinators = async () => {
     if (!panchayathId) return;
     
+    console.log("Fetching coordinators for panchayath:", panchayathId);
     try {
       const { data, error } = await supabase
         .from("coordinators")
@@ -103,6 +105,7 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
         .eq("panchayath_id", panchayathId);
 
       if (error) throw error;
+      console.log("Coordinators fetched:", data);
       setCoordinators(data || []);
     } catch (error) {
       console.error("Error fetching coordinators:", error);
