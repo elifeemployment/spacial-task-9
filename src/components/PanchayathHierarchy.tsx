@@ -5,9 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Users, MapPin, Building, BarChart3, Edit, Trash2, MessageSquare, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { PanchayathChart } from "@/components/PanchayathChart";
 import { PanchayathForm } from "@/components/PanchayathForm";
+import { SupervisorForm } from "@/components/SupervisorForm";
+import { GroupLeaderForm } from "@/components/GroupLeaderForm";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +24,16 @@ interface PanchayathData {
   supervisor_count: number;
   group_leader_count: number;
   pro_count: number;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  mobile_number: string;
+  ward?: number;
+  supervisor_id?: string;
+  coordinator_id?: string;
+  group_leader_id?: string;
 }
 
 export const PanchayathHierarchy = () => {
@@ -37,6 +50,12 @@ export const PanchayathHierarchy = () => {
     group_leader: false,
     pro: false
   });
+  const [showAgentDialog, setShowAgentDialog] = useState(false);
+  const [selectedAgentType, setSelectedAgentType] = useState<'supervisor' | 'group_leader' | null>(null);
+  const [selectedPanchayathForAgents, setSelectedPanchayathForAgents] = useState<PanchayathData | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
 
   const fetchPanchayaths = async () => {
@@ -134,9 +153,14 @@ export const PanchayathHierarchy = () => {
   };
 
   const handleEditComplete = () => {
+    setEditingAgent(null);
+    setShowEditDialog(false);
     setShowEditForm(false);
     setEditingPanchayath(null);
-    fetchPanchayaths();
+    fetchPanchayaths(); // Refresh counts
+    if (selectedAgentType && selectedPanchayathForAgents) {
+      fetchAgents(selectedAgentType, selectedPanchayathForAgents.id); // Refresh agent list
+    }
   };
 
   const getRoleColor = (role: string) => {
@@ -161,6 +185,71 @@ export const PanchayathHierarchy = () => {
       ...prev,
       [role]: !prev[role]
     }));
+  };
+
+  const fetchAgents = async (type: 'supervisor' | 'group_leader', panchayathId: string) => {
+    try {
+      const tableName = type === 'supervisor' ? 'supervisors' : 'group_leaders';
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('panchayath_id', panchayathId)
+        .order('name');
+
+      if (error) throw error;
+      setAgents(data || []);
+    } catch (error) {
+      console.error(`Error fetching ${type}s:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to fetch ${type}s`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewAgents = (type: 'supervisor' | 'group_leader', panchayath: PanchayathData) => {
+    setSelectedAgentType(type);
+    setSelectedPanchayathForAgents(panchayath);
+    fetchAgents(type, panchayath.id);
+    setShowAgentDialog(true);
+  };
+
+  const handleEditAgent = (agent: Agent) => {
+    setEditingAgent(agent);
+    setShowAgentDialog(false);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteAgent = async (agentId: string, agentName: string) => {
+    if (!selectedAgentType) return;
+    
+    try {
+      const tableName = selectedAgentType === 'supervisor' ? 'supervisors' : 'group_leaders';
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', agentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'} deleted successfully`,
+      });
+
+      fetchPanchayaths(); // Refresh counts
+      if (selectedPanchayathForAgents) {
+        fetchAgents(selectedAgentType, selectedPanchayathForAgents.id); // Refresh agent list
+      }
+    } catch (error: any) {
+      console.error(`Error deleting ${selectedAgentType}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to delete ${selectedAgentType}`,
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -333,24 +422,32 @@ export const PanchayathHierarchy = () => {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-supervisor/10 border border-supervisor/20">
+                                <div 
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-supervisor/10 border border-supervisor/20 cursor-pointer hover:bg-supervisor/20 transition-colors"
+                                  onClick={() => handleViewAgents('supervisor', panchayath)}
+                                >
                                   <div className="h-3 w-3 rounded-full bg-supervisor"></div>
-                                  <div>
+                                  <div className="flex-1">
                                     <p className="text-xs text-muted-foreground">
                                       Supervisors {showAgentNames.supervisor ? '(Names Shown)' : '(Names Hidden)'}
                                     </p>
                                     <p className="font-semibold">{panchayath.supervisor_count}</p>
                                   </div>
+                                  <Edit className="h-3 w-3 text-muted-foreground" />
                                 </div>
 
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-group-leader/10 border border-group-leader/20">
+                                <div 
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-group-leader/10 border border-group-leader/20 cursor-pointer hover:bg-group-leader/20 transition-colors"
+                                  onClick={() => handleViewAgents('group_leader', panchayath)}
+                                >
                                   <div className="h-3 w-3 rounded-full bg-group-leader"></div>
-                                  <div>
+                                  <div className="flex-1">
                                     <p className="text-xs text-muted-foreground">
                                       Group Leaders {showAgentNames.group_leader ? '(Names Shown)' : '(Names Hidden)'}
                                     </p>
                                     <p className="font-semibold">{panchayath.group_leader_count}</p>
                                   </div>
+                                  <Edit className="h-3 w-3 text-muted-foreground" />
                                 </div>
 
                                 <div className="flex items-center gap-2 p-2 rounded-lg bg-pro/10 border border-pro/20">
@@ -387,6 +484,104 @@ export const PanchayathHierarchy = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Agents List Dialog */}
+      <Dialog open={showAgentDialog} onOpenChange={setShowAgentDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedAgentType === 'supervisor' ? 'Supervisors' : 'Group Leaders'} - {selectedPanchayathForAgents?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {agents.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                No {selectedAgentType === 'supervisor' ? 'supervisors' : 'group leaders'} found
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {agents.map((agent) => (
+                  <Card key={agent.id} className="border border-border">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold">{agent.name}</h4>
+                          <p className="text-sm text-muted-foreground">{agent.mobile_number}</p>
+                          {agent.ward && (
+                            <p className="text-xs text-muted-foreground">Ward {agent.ward}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditAgent(agent)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="hover:bg-destructive hover:text-destructive-foreground">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete {selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{agent.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteAgent(agent.id, agent.name)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Agent Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Edit {selectedAgentType === 'supervisor' ? 'Supervisor' : 'Group Leader'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingAgent && selectedPanchayathForAgents && (
+            <>
+              {selectedAgentType === 'supervisor' && (
+                <SupervisorForm
+                  selectedPanchayath={selectedPanchayathForAgents}
+                  editingSupervisor={editingAgent}
+                  onEditComplete={handleEditComplete}
+                />
+              )}
+              {selectedAgentType === 'group_leader' && (
+                <GroupLeaderForm
+                  selectedPanchayath={selectedPanchayathForAgents}
+                  editingGroupLeader={editingAgent}
+                  onEditComplete={handleEditComplete}
+                />
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
