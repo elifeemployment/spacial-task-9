@@ -87,53 +87,101 @@ export const PanchayathView = () => {
 
       switch (type) {
         case "coordinator": {
+          // First get the panchayath_id from the panchayath name
+          const { data: panchayathData, error: panchayathError } = await supabase
+            .from('panchayaths')
+            .select('id')
+            .eq('name', row.panchayath_name)
+            .single();
+          
+          if (panchayathError || !panchayathData) {
+            throw new Error('Panchayath not found');
+          }
+          
+          // Now query coordinator by panchayath_id + ward
           const { data, error } = await supabase
             .from("coordinators")
             .select("id, name, mobile_number, ward, rating, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath)
-            .eq("mobile_number", String(row.coordinator_mobile))
-            .limit(1);
-          console.log(`Coordinator query result:`, { data, error, searching_for: { mobile: String(row.coordinator_mobile), panchayath_id: selectedPanchayath } });
+            .eq("panchayath_id", panchayathData.id)
+            .eq("ward", row.coordinator_ward)
+            .single();
+          console.log(`Coordinator query result:`, { data, error, searching_for: { panchayath_id: panchayathData.id, ward: row.coordinator_ward } });
           if (error) throw error;
-          record = data?.[0] || null;
+          record = data;
           break;
         }
         case "supervisor": {
+          // First get the panchayath_id from the panchayath name
+          const { data: panchayathData, error: panchayathError } = await supabase
+            .from('panchayaths')
+            .select('id')
+            .eq('name', row.panchayath_name)
+            .single();
+          
+          if (panchayathError || !panchayathData) {
+            throw new Error('Panchayath not found');
+          }
+          
+          // Query supervisor by panchayath_id + mobile_number
           const { data, error } = await supabase
             .from("supervisors")
             .select("id, name, mobile_number, coordinator_id, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath)
+            .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.supervisor_mobile))
-            .limit(1);
-          console.log(`Supervisor query result:`, { data, error, searching_for: { mobile: String(row.supervisor_mobile), panchayath_id: selectedPanchayath } });
+            .single();
+          console.log(`Supervisor query result:`, { data, error, searching_for: { mobile: String(row.supervisor_mobile), panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data?.[0] || null;
+          record = data;
           break;
         }
         case "group_leader": {
+          // First get the panchayath_id from the panchayath name
+          const { data: panchayathData, error: panchayathError } = await supabase
+            .from('panchayaths')
+            .select('id')
+            .eq('name', row.panchayath_name)
+            .single();
+          
+          if (panchayathError || !panchayathData) {
+            throw new Error('Panchayath not found');
+          }
+          
+          // Query group_leader by panchayath_id + ward + mobile_number
           const { data, error } = await supabase
             .from("group_leaders")
             .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath)
+            .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.group_leader_mobile))
             .eq("ward", row.group_leader_ward)
-            .limit(1);
-          console.log(`Group leader query result:`, { data, error, searching_for: { mobile: String(row.group_leader_mobile), ward: row.group_leader_ward, panchayath_id: selectedPanchayath } });
+            .single();
+          console.log(`Group leader query result:`, { data, error, searching_for: { mobile: String(row.group_leader_mobile), ward: row.group_leader_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data?.[0] || null;
+          record = data;
           break;
         }
         case "pro": {
+          // First get the panchayath_id from the panchayath name
+          const { data: panchayathData, error: panchayathError } = await supabase
+            .from('panchayaths')
+            .select('id')
+            .eq('name', row.panchayath_name)
+            .single();
+          
+          if (panchayathError || !panchayathData) {
+            throw new Error('Panchayath not found');
+          }
+          
+          // Query pro by panchayath_id + ward + mobile_number
           const { data, error } = await supabase
             .from("pros")
             .select("id, name, mobile_number, ward, group_leader_id, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath)
+            .eq("panchayath_id", panchayathData.id)
             .eq("mobile_number", String(row.pro_mobile))
             .eq("ward", row.pro_ward)
-            .limit(1);
-          console.log(`Pro query result:`, { data, error, searching_for: { mobile: String(row.pro_mobile), ward: row.pro_ward, panchayath_id: selectedPanchayath } });
+            .single();
+          console.log(`Pro query result:`, { data, error, searching_for: { mobile: String(row.pro_mobile), ward: row.pro_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data?.[0] || null;
+          record = data;
           break;
         }
         default:
