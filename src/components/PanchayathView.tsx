@@ -87,60 +87,38 @@ export const PanchayathView = () => {
 
       switch (type) {
         case "coordinator": {
-          // First, check what coordinators exist for this panchayath
-          const { data: allCoordinators } = await supabase
-            .from("coordinators")
-            .select("id, name, mobile, ward, rating, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath);
-          console.log(`All coordinators in panchayath:`, allCoordinators);
-          
           const { data, error } = await supabase
             .from("coordinators")
             .select("id, name, mobile, ward, rating, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .ilike("name", `%${row.coordinator_name}%`)
-            .eq("ward", row.coordinator_ward)
+            .eq("mobile", row.coordinator_mobile)
             .limit(1);
-          console.log(`Coordinator query result:`, { data, error, searching_for: { name: row.coordinator_name, ward: row.coordinator_ward } });
+          console.log(`Coordinator query result:`, { data, error, searching_for: { mobile: row.coordinator_mobile, panchayath_id: selectedPanchayath } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
         }
         case "supervisor": {
-          // First, check what supervisors exist for this panchayath
-          const { data: allSupervisors } = await supabase
-            .from("supervisors")
-            .select("id, name, mobile_number, coordinator_id, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath);
-          console.log(`All supervisors in panchayath:`, allSupervisors);
-          
           const { data, error } = await supabase
             .from("supervisors")
             .select("id, name, mobile_number, coordinator_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .ilike("name", `%${row.supervisor_name}%`)
+            .eq("mobile_number", row.supervisor_mobile)
             .limit(1);
-          console.log(`Supervisor query result:`, { data, error, searching_for: { name: row.supervisor_name } });
+          console.log(`Supervisor query result:`, { data, error, searching_for: { mobile: row.supervisor_mobile, panchayath_id: selectedPanchayath } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
         }
         case "group_leader": {
-          // First, check what group leaders exist for this panchayath
-          const { data: allGroupLeaders } = await supabase
-            .from("group_leaders")
-            .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
-            .eq("panchayath_id", selectedPanchayath);
-          console.log(`All group leaders in panchayath:`, allGroupLeaders);
-          
           const { data, error } = await supabase
             .from("group_leaders")
             .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .ilike("name", `%${row.group_leader_name}%`)
+            .eq("mobile_number", row.group_leader_mobile)
             .eq("ward", row.group_leader_ward)
             .limit(1);
-          console.log(`Group leader query result:`, { data, error, searching_for: { name: row.group_leader_name, ward: row.group_leader_ward } });
+          console.log(`Group leader query result:`, { data, error, searching_for: { mobile: row.group_leader_mobile, ward: row.group_leader_ward, panchayath_id: selectedPanchayath } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
@@ -150,10 +128,10 @@ export const PanchayathView = () => {
             .from("pros")
             .select("id, name, mobile_number, ward, group_leader_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .eq("name", row.pro_name)
+            .eq("mobile_number", row.pro_mobile)
             .eq("ward", row.pro_ward)
             .limit(1);
-          console.log(`Pro query result:`, { data, error, searching_for: { name: row.pro_name, ward: row.pro_ward } });
+          console.log(`Pro query result:`, { data, error, searching_for: { mobile: row.pro_mobile, ward: row.pro_ward, panchayath_id: selectedPanchayath } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
