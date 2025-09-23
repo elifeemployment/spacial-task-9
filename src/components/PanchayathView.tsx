@@ -144,7 +144,20 @@ export const PanchayathView = () => {
             .maybeSingle();
           console.log(`Supervisor query result:`, { data, error, searching_for: { mobile: String(row.supervisor_mobile), panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data;
+          
+          // If no existing supervisor found, create a new record structure for editing
+          if (!data) {
+            record = {
+              id: null, // No existing ID - this will be treated as a new supervisor
+              name: row.supervisor_name,
+              mobile_number: row.supervisor_mobile,
+              panchayath_id: panchayathData.id,
+              coordinator_id: null, // Will need to be set in the form
+              supervisor_wards: row.supervisor_wards || []
+            };
+          } else {
+            record = data;
+          }
           break;
         }
         case "group_leader": {
@@ -169,7 +182,20 @@ export const PanchayathView = () => {
             .maybeSingle();
           console.log(`Group leader query result:`, { data, error, searching_for: { mobile: String(row.group_leader_mobile), ward: row.group_leader_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data;
+          
+          // If no existing group leader found, create a new record structure for editing
+          if (!data) {
+            record = {
+              id: null, // No existing ID - this will be treated as a new group leader
+              name: row.group_leader_name,
+              mobile_number: row.group_leader_mobile,
+              ward: row.group_leader_ward,
+              panchayath_id: panchayathData.id,
+              supervisor_id: null // Will need to be set in the form
+            };
+          } else {
+            record = data;
+          }
           break;
         }
         case "pro": {
@@ -194,7 +220,20 @@ export const PanchayathView = () => {
             .maybeSingle();
           console.log(`Pro query result:`, { data, error, searching_for: { mobile: String(row.pro_mobile), ward: row.pro_ward, panchayath_id: panchayathData.id } });
           if (error) throw error;
-          record = data;
+          
+          // If no existing pro found, create a new record structure for editing
+          if (!data) {
+            record = {
+              id: null, // No existing ID - this will be treated as a new pro
+              name: row.pro_name,
+              mobile_number: row.pro_mobile,
+              ward: row.pro_ward,
+              panchayath_id: panchayathData.id,
+              group_leader_id: null // Will need to be set in the form
+            };
+          } else {
+            record = data;
+          }
           break;
         }
         default:
