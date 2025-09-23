@@ -72,13 +72,13 @@ export const CoordinatorReports = ({ currentUser }: CoordinatorReportsProps) => 
       // Fetch coordinators for this panchayath
       const { data: coordinators } = await supabase
         .from('coordinators')
-        .select('id, name, mobile_number')
+        .select('id, name, mobile')
         .eq('panchayath_id', currentUser.panchayath_id);
 
       if (coordinators) {
         for (const coordinator of coordinators) {
           const performance = await analyzeAgentPerformance(
-            coordinator.mobile_number, 
+            coordinator.mobile, 
             coordinator.name, 
             'coordinator'
           );

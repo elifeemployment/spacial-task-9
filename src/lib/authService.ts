@@ -27,8 +27,8 @@ export const findUserByMobile = async (mobile: string): Promise<AuthResult> => {
   try {
     const { data: coordinatorsData, error: coordinatorsError } = await supabase
       .from('coordinators')
-      .select('id, name, mobile_number, panchayath_id')
-      .eq('mobile_number', cleanMobile)
+      .select('id, name, mobile, panchayath_id')
+      .eq('mobile', cleanMobile)
       .limit(1);
     
     if (!coordinatorsError && coordinatorsData && coordinatorsData.length > 0) {
@@ -38,7 +38,7 @@ export const findUserByMobile = async (mobile: string): Promise<AuthResult> => {
         user: {
           id: user.id,
           name: user.name,
-          mobile_number: user.mobile_number,
+          mobile_number: user.mobile,
           role: 'coordinator',
           table: 'coordinators',
           hasAdminAccess: false,

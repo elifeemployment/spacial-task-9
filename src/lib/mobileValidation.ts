@@ -49,7 +49,7 @@ export const checkMobileDuplicate = async (
     let coordinatorsQuery = supabase
       .from('coordinators')
       .select('id')
-      .eq('mobile_number', cleanMobile);
+      .eq('mobile', cleanMobile);
     
     if (currentRecordId && currentTable === 'coordinators') {
       coordinatorsQuery = coordinatorsQuery.neq('id', currentRecordId);
