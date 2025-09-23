@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { checkMobileDuplicate, getTableDisplayName } from "@/lib/mobileValidation";
 import { AgentConfirmationDialog } from "./AgentConfirmationDialog";
 
 export interface SupervisorFormProps {
@@ -145,6 +146,18 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
 
     setLoading(true);
     try {
+      // Check for duplicate mobile number
+      const duplicateCheck = await checkMobileDuplicate(mobile, editingSupervisor?.id, 'supervisors');
+      if (duplicateCheck.isDuplicate) {
+        toast({
+          title: "Error",
+          description: `This mobile number is already registered in ${getTableDisplayName(duplicateCheck.table!)}`,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       if (isEditing) {
         // Update supervisor
         const { data: updated, error: supervisorError } = await supabase

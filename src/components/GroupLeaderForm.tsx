@@ -121,6 +121,16 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
       return;
     }
 
+    // Validate mobile number (exactly 10 digits)
+    if (!/^\d{10}$/.test(mobile.trim())) {
+      toast({
+        title: "Error",
+        description: "Mobile number must be exactly 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const wardNum = parseInt(ward);
     if (isNaN(wardNum) || wardNum < 1 || wardNum > selectedPanchayath.number_of_wards) {
       toast({
@@ -287,8 +297,12 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
                 id="gl-mobile"
                 type="tel"
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                placeholder="Enter mobile number"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setMobile(value);
+                }}
+                placeholder="Enter 10-digit mobile number"
+                maxLength={10}
                 required
               />
             </div>
