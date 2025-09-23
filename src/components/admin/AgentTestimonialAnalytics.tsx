@@ -175,7 +175,7 @@ export const AgentTestimonialAnalytics = () => {
         hierarchy.coordinator = {
           id: coord.id,
           name: coord.name,
-          mobile: coord.mobile,
+          mobile: coord.mobile_number,
           type: 'coordinator',
           ward: coord.ward,
           rating: coord.rating,

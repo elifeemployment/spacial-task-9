@@ -197,7 +197,7 @@ export const MyTasks = ({
           if (taskAny.reassigned_to_coordinator) {
             const {
               data: coordinatorData
-            } = await supabase.from('coordinators').select('id, name, mobile').eq('id', taskAny.reassigned_to_coordinator).single();
+            } = await supabase.from('coordinators').select('id, name, mobile_number').eq('id', taskAny.reassigned_to_coordinator).single();
             reassigned_coordinator = coordinatorData;
           }
           if (taskAny.reassigned_to_supervisor) {
@@ -245,12 +245,12 @@ export const MyTasks = ({
         const {
           data: coordinatorData,
           error: coordinatorError
-        } = await supabase.from('coordinators').select('id, name, mobile').order('name');
+        } = await supabase.from('coordinators').select('id, name, mobile_number').order('name');
         if (!coordinatorError && coordinatorData) {
           allAssignees.push(...coordinatorData.map((coordinator: any) => ({
             id: coordinator.id,
             name: coordinator.name,
-            mobile: coordinator.mobile,
+            mobile: coordinator.mobile_number,
             type: 'coordinator' as const
           })));
         }
@@ -361,7 +361,7 @@ export const MyTasks = ({
             if (taskAny.reassigned_to_coordinator) {
               const {
                 data: coordinatorData
-              } = await supabase.from('coordinators').select('id, name, mobile').eq('id', taskAny.reassigned_to_coordinator).single();
+              } = await supabase.from('coordinators').select('id, name, mobile_number').eq('id', taskAny.reassigned_to_coordinator).single();
               reassigned_coordinator = coordinatorData;
             }
             if (taskAny.reassigned_to_supervisor) {

@@ -96,19 +96,19 @@ export const PerformanceReport = () => {
       // Get coordinators
       const { data: coordinators, error: coordError } = await supabase
         .from('coordinators')
-        .select('id, name, mobile, panchayath_id')
+        .select('id, name, mobile_number, panchayath_id')
         .eq('panchayath_id', selectedPanchayath);
 
       if (coordError) throw coordError;
 
       if (coordinators) {
         for (const agent of coordinators) {
-          const performance = await analyzeAgentPerformance(agent.mobile, agent.name, 'coordinator');
+          const performance = await analyzeAgentPerformance(agent.mobile_number, agent.name, 'coordinator');
           allAgents.push({
             agent_id: agent.id,
             agent_name: agent.name,
             agent_type: 'coordinator',
-            mobile_number: agent.mobile,
+            mobile_number: agent.mobile_number,
             ...performance
           });
         }

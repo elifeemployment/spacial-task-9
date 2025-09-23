@@ -42,7 +42,7 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   useEffect(() => {
     if (editingCoordinator) {
       setName(editingCoordinator.name);
-      setMobile(editingCoordinator.mobile);
+      setMobile(editingCoordinator.mobile_number);
       setWard(editingCoordinator.ward.toString());
       setRating(editingCoordinator.rating.toString());
       setPanchayathId(editingCoordinator.panchayath_id);
@@ -137,7 +137,7 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
           .from("coordinators")
           .update({
             name: name.trim(),
-            mobile: mobile.trim(),
+            mobile_number: mobile.trim(),
             ward: wardNum,
             rating: ratingNum,
           })
@@ -163,7 +163,7 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
           .insert({
             panchayath_id: panchayathId,
             name: name.trim(),
-            mobile: mobile.trim(),
+            mobile_number: mobile.trim(),
             ward: wardNum,
             rating: ratingNum,
           });

@@ -89,9 +89,9 @@ export const PanchayathView = () => {
         case "coordinator": {
           const { data, error } = await supabase
             .from("coordinators")
-            .select("id, name, mobile, ward, rating, panchayath_id")
+            .select("id, name, mobile_number, ward, rating, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .eq("mobile", String(row.coordinator_mobile))
+            .eq("mobile_number", String(row.coordinator_mobile))
             .limit(1);
           console.log(`Coordinator query result:`, { data, error, searching_for: { mobile: String(row.coordinator_mobile), panchayath_id: selectedPanchayath } });
           if (error) throw error;
@@ -202,7 +202,7 @@ export const PanchayathView = () => {
             .select("id")
             .eq("panchayath_id", selectedPanchayath)
             .eq("name", match.coordinator_name)
-            .eq("mobile", match.coordinator_mobile)
+            .eq("mobile_number", match.coordinator_mobile)
             .eq("ward", match.coordinator_ward)
             .limit(1);
           if (findError) throw findError;
