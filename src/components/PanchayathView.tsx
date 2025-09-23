@@ -87,11 +87,18 @@ export const PanchayathView = () => {
 
       switch (type) {
         case "coordinator": {
+          // First, check what coordinators exist for this panchayath
+          const { data: allCoordinators } = await supabase
+            .from("coordinators")
+            .select("id, name, mobile, ward, rating, panchayath_id")
+            .eq("panchayath_id", selectedPanchayath);
+          console.log(`All coordinators in panchayath:`, allCoordinators);
+          
           const { data, error } = await supabase
             .from("coordinators")
             .select("id, name, mobile, ward, rating, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .eq("name", row.coordinator_name)
+            .ilike("name", `%${row.coordinator_name}%`)
             .eq("ward", row.coordinator_ward)
             .limit(1);
           console.log(`Coordinator query result:`, { data, error, searching_for: { name: row.coordinator_name, ward: row.coordinator_ward } });
@@ -100,11 +107,18 @@ export const PanchayathView = () => {
           break;
         }
         case "supervisor": {
+          // First, check what supervisors exist for this panchayath
+          const { data: allSupervisors } = await supabase
+            .from("supervisors")
+            .select("id, name, mobile_number, coordinator_id, panchayath_id")
+            .eq("panchayath_id", selectedPanchayath);
+          console.log(`All supervisors in panchayath:`, allSupervisors);
+          
           const { data, error } = await supabase
             .from("supervisors")
             .select("id, name, mobile_number, coordinator_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .eq("name", row.supervisor_name)
+            .ilike("name", `%${row.supervisor_name}%`)
             .limit(1);
           console.log(`Supervisor query result:`, { data, error, searching_for: { name: row.supervisor_name } });
           if (error) throw error;
@@ -112,11 +126,18 @@ export const PanchayathView = () => {
           break;
         }
         case "group_leader": {
+          // First, check what group leaders exist for this panchayath
+          const { data: allGroupLeaders } = await supabase
+            .from("group_leaders")
+            .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
+            .eq("panchayath_id", selectedPanchayath);
+          console.log(`All group leaders in panchayath:`, allGroupLeaders);
+          
           const { data, error } = await supabase
             .from("group_leaders")
             .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
-            .eq("name", row.group_leader_name)
+            .ilike("name", `%${row.group_leader_name}%`)
             .eq("ward", row.group_leader_ward)
             .limit(1);
           console.log(`Group leader query result:`, { data, error, searching_for: { name: row.group_leader_name, ward: row.group_leader_ward } });
