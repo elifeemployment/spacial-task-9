@@ -72,13 +72,16 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
       const panchayath = panchayaths.find(p => p.id === panchayathId);
       setSelectedPanchayath(panchayath);
       fetchCoordinators();
-      setSelectedWards([]); // Reset wards when panchayath changes
-      setCoordinatorId("");
+      // Only reset wards and coordinator when not editing or when panchayath actually changes
+      if (!isEditing || (isEditing && editingSupervisor?.panchayath_id !== panchayathId)) {
+        setSelectedWards([]);
+        setCoordinatorId("");
+      }
     } else {
       setSelectedPanchayath(null);
       setCoordinators([]);
     }
-  }, [panchayathId, panchayaths]);
+  }, [panchayathId, panchayaths, isEditing, editingSupervisor]);
 
   const fetchPanchayaths = async () => {
     try {
