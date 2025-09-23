@@ -76,12 +76,15 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
     if (panchayathId) {
       const panchayath = panchayaths.find(p => p.id === panchayathId);
       setSelectedPanchayath(panchayath);
-      setWard(""); // Reset ward when panchayath changes
-      setSupervisorId("");
+      // Only reset ward and supervisor when not editing or when panchayath actually changes
+      if (!isEditing || (isEditing && editingGroupLeader?.panchayath_id !== panchayathId)) {
+        setWard(""); // Reset ward when panchayath changes
+        setSupervisorId("");
+      }
     } else {
       setSelectedPanchayath(null);
     }
-  }, [panchayathId, panchayaths]);
+  }, [panchayathId, panchayaths, isEditing, editingGroupLeader?.panchayath_id]);
 
   useEffect(() => {
     if (ward && panchayathId) {
