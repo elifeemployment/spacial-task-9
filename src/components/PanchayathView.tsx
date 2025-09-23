@@ -81,6 +81,8 @@ export const PanchayathView = () => {
   const handleEdit = async (type: string, row: any) => {
     try {
       if (!selectedPanchayath) throw new Error("Select a panchayath first");
+      
+      console.log(`Attempting to edit ${type}:`, row);
       let record: any = null;
 
       switch (type) {
@@ -90,9 +92,9 @@ export const PanchayathView = () => {
             .select("id, name, mobile, ward, rating, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
             .eq("name", row.coordinator_name)
-            .eq("mobile", row.coordinator_mobile)
             .eq("ward", row.coordinator_ward)
             .limit(1);
+          console.log(`Coordinator query result:`, { data, error, searching_for: { name: row.coordinator_name, ward: row.coordinator_ward } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
@@ -103,8 +105,8 @@ export const PanchayathView = () => {
             .select("id, name, mobile_number, coordinator_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
             .eq("name", row.supervisor_name)
-            .eq("mobile_number", row.supervisor_mobile)
             .limit(1);
+          console.log(`Supervisor query result:`, { data, error, searching_for: { name: row.supervisor_name } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
@@ -115,9 +117,9 @@ export const PanchayathView = () => {
             .select("id, name, mobile_number, ward, supervisor_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
             .eq("name", row.group_leader_name)
-            .eq("mobile_number", row.group_leader_mobile)
             .eq("ward", row.group_leader_ward)
             .limit(1);
+          console.log(`Group leader query result:`, { data, error, searching_for: { name: row.group_leader_name, ward: row.group_leader_ward } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
@@ -128,9 +130,9 @@ export const PanchayathView = () => {
             .select("id, name, mobile_number, ward, group_leader_id, panchayath_id")
             .eq("panchayath_id", selectedPanchayath)
             .eq("name", row.pro_name)
-            .eq("mobile_number", row.pro_mobile)
             .eq("ward", row.pro_ward)
             .limit(1);
+          console.log(`Pro query result:`, { data, error, searching_for: { name: row.pro_name, ward: row.pro_ward } });
           if (error) throw error;
           record = data?.[0] || null;
           break;
