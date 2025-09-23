@@ -50,11 +50,8 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   }, [editingCoordinator]);
 
   useEffect(() => {
-    console.log("panchayathId changed:", panchayathId);
-    console.log("available panchayaths:", panchayaths);
     if (panchayathId) {
       const panchayath = panchayaths.find(p => p.id === panchayathId);
-      console.log("found panchayath:", panchayath);
       setSelectedPanchayath(panchayath);
       setWard(""); // Reset ward when panchayath changes
     } else {
@@ -214,12 +211,6 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   };
 
   const wardOptions = selectedPanchayath ? Array.from({ length: selectedPanchayath.number_of_wards }, (_, i) => i + 1) : [];
-
-  // Debug effect to track selectedPanchayath and ward options
-  useEffect(() => {
-    console.log("selectedPanchayath:", selectedPanchayath);
-    console.log("wardOptions:", wardOptions);
-  }, [selectedPanchayath, wardOptions]);
 
   const handleConfirmation = () => {
     setShowConfirmation(false);
