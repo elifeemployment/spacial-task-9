@@ -214,8 +214,12 @@ export const CoordinatorForm = ({ selectedPanchayath: preSelectedPanchayath, edi
   };
 
   const wardOptions = selectedPanchayath ? Array.from({ length: selectedPanchayath.number_of_wards }, (_, i) => i + 1) : [];
-  console.log("selectedPanchayath:", selectedPanchayath);
-  console.log("wardOptions:", wardOptions);
+
+  // Debug effect to track selectedPanchayath and ward options
+  useEffect(() => {
+    console.log("selectedPanchayath:", selectedPanchayath);
+    console.log("wardOptions:", wardOptions);
+  }, [selectedPanchayath, wardOptions]);
 
   const handleConfirmation = () => {
     setShowConfirmation(false);
