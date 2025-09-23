@@ -114,43 +114,34 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
     
     console.log("Fetching supervisors for ward:", wardNum, "panchayath:", panchayathId);
     try {
-      // First try the join approach
-      let { data: supervisorsWithWards, error: joinError } = await supabase
+      // Get all supervisors for the panchayath
+      const { data: allSupervisors, error: supervisorError } = await supabase
         .from("supervisors")
-        .select(`
-          *,
-          supervisor_wards!inner(ward)
-        `)
-        .eq("panchayath_id", panchayathId)
-        .eq("supervisor_wards.ward", wardNum);
+        .select("*")
+        .eq("panchayath_id", panchayathId);
 
-      if (joinError) {
-        console.error("Join query failed:", joinError);
-        // Fallback: Get all supervisors and filter by ward manually
-        const { data: allSupervisors, error: allError } = await supabase
-          .from("supervisors")
-          .select("*")
-          .eq("panchayath_id", panchayathId);
+      if (supervisorError) throw supervisorError;
 
-        if (allError) throw allError;
+      // Filter supervisors who have the required ward
+      const supervisorsForWard = [];
+      for (const supervisor of allSupervisors || []) {
+        const { data: wards, error: wardsError } = await supabase
+          .from("supervisor_wards")
+          .select("ward")
+          .eq("supervisor_id", supervisor.id);
         
-        // Filter supervisors who have the required ward
-        const supervisorsForWard = [];
-        for (const supervisor of allSupervisors || []) {
-          const { data: wards } = await supabase
-            .from("supervisor_wards")
-            .select("ward")
-            .eq("supervisor_id", supervisor.id);
-          
-          if (wards?.some(w => w.ward === wardNum)) {
-            supervisorsForWard.push(supervisor);
-          }
+        if (wardsError) {
+          console.error("Error fetching wards for supervisor:", supervisor.id, wardsError);
+          continue;
         }
-        supervisorsWithWards = supervisorsForWard;
+        
+        if (wards?.some(w => w.ward === wardNum)) {
+          supervisorsForWard.push(supervisor);
+        }
       }
 
-      console.log("Supervisors fetched:", supervisorsWithWards);
-      setSupervisors(supervisorsWithWards || []);
+      console.log("Supervisors fetched:", supervisorsForWard);
+      setSupervisors(supervisorsForWard || []);
     } catch (error) {
       console.error("Error fetching supervisors:", error);
       setSupervisors([]);
