@@ -48,8 +48,29 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
       setWard(editingGroupLeader.ward.toString());
       setSupervisorId(editingGroupLeader.supervisor_id);
       setPanchayathId(editingGroupLeader.panchayath_id);
+      
+      // For editing, also fetch all supervisors as a fallback
+      if (editingGroupLeader.panchayath_id) {
+        fetchAllSupervisors(editingGroupLeader.panchayath_id);
+      }
     }
   }, [editingGroupLeader]);
+
+  const fetchAllSupervisors = async (panchayathId: string) => {
+    try {
+      console.log("Fetching all supervisors for panchayath:", panchayathId);
+      const { data, error } = await supabase
+        .from("supervisors")
+        .select("*")
+        .eq("panchayath_id", panchayathId);
+
+      if (error) throw error;
+      console.log("All supervisors fetched:", data);
+      setSupervisors(data || []);
+    } catch (error) {
+      console.error("Error fetching all supervisors:", error);
+    }
+  };
 
   useEffect(() => {
     if (panchayathId) {
@@ -90,7 +111,8 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
     
     console.log("Fetching supervisors for ward:", wardNum, "panchayath:", panchayathId);
     try {
-      const { data, error } = await supabase
+      // First try the join approach
+      let { data: supervisorsWithWards, error: joinError } = await supabase
         .from("supervisors")
         .select(`
           *,
@@ -99,11 +121,36 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
         .eq("panchayath_id", panchayathId)
         .eq("supervisor_wards.ward", wardNum);
 
-      if (error) throw error;
-      console.log("Supervisors fetched:", data);
-      setSupervisors(data || []);
+      if (joinError) {
+        console.error("Join query failed:", joinError);
+        // Fallback: Get all supervisors and filter by ward manually
+        const { data: allSupervisors, error: allError } = await supabase
+          .from("supervisors")
+          .select("*")
+          .eq("panchayath_id", panchayathId);
+
+        if (allError) throw allError;
+        
+        // Filter supervisors who have the required ward
+        const supervisorsForWard = [];
+        for (const supervisor of allSupervisors || []) {
+          const { data: wards } = await supabase
+            .from("supervisor_wards")
+            .select("ward")
+            .eq("supervisor_id", supervisor.id);
+          
+          if (wards?.some(w => w.ward === wardNum)) {
+            supervisorsForWard.push(supervisor);
+          }
+        }
+        supervisorsWithWards = supervisorsForWard;
+      }
+
+      console.log("Supervisors fetched:", supervisorsWithWards);
+      setSupervisors(supervisorsWithWards || []);
     } catch (error) {
       console.error("Error fetching supervisors:", error);
+      setSupervisors([]);
     }
   };
 
@@ -335,11 +382,18 @@ export const GroupLeaderForm = ({ selectedPanchayath: preSelectedPanchayath, edi
                   <SelectValue placeholder="Select supervisor for this ward" />
                 </SelectTrigger>
                 <SelectContent>
-                  {supervisors.map((supervisor) => (
-                    <SelectItem key={supervisor.id} value={supervisor.id}>
-                      {supervisor.name} ({supervisor.mobile_number})
-                    </SelectItem>
-                  ))}
+                  {supervisors.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      No supervisors found for ward {ward}
+                      {isEditing && <div className="text-xs">Showing all supervisors for panchayath</div>}
+                    </div>
+                  ) : (
+                    supervisors.map((supervisor) => (
+                      <SelectItem key={supervisor.id} value={supervisor.id}>
+                        {supervisor.name} ({supervisor.mobile_number})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
