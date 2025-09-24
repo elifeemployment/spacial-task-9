@@ -67,6 +67,8 @@ export const PanchayathSelector = ({ onPanchayathSelect, onPanchayathEdit }: Pan
     );
   }
 
+  const selectedPanchayath = panchayaths.find(p => p.id === selectedId);
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -89,9 +91,18 @@ export const PanchayathSelector = ({ onPanchayathSelect, onPanchayathEdit }: Pan
         </Select>
 
         {selectedId && (
-          <Button onClick={handleSelect} className="w-full">
-            Select Panchayath
-          </Button>
+          <div className="space-y-4">
+            <Button onClick={handleSelect} className="w-full">
+              Select for Management
+            </Button>
+            <Button
+              onClick={() => onPanchayathEdit(selectedPanchayath)}
+              className="w-full"
+              variant="outline"
+            >
+              Edit Panchayath Details
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PanchayathForm } from "@/components/PanchayathForm";
 import { PanchayathSelector } from "@/components/PanchayathSelector";
+import { PanchayathNotes } from "@/components/PanchayathNotes";
 import { MapPin } from "lucide-react";
 
 export const PanchayathManagement = () => {
@@ -11,6 +12,8 @@ export const PanchayathManagement = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showPanchayathList, setShowPanchayathList] = useState(false);
+  const [selectedPanchayath, setSelectedPanchayath] = useState<any>(null);
+  const [showNotes, setShowNotes] = useState(false);
 
   const handlePanchayathCreatedOrUpdated = () => {
     setEditingPanchayath(null);
@@ -119,13 +122,37 @@ export const PanchayathManagement = () => {
                     </div>
                     <PanchayathSelector 
                       key={refreshKey} 
-                      onPanchayathSelect={() => {}} 
+                      onPanchayathSelect={(panchayath) => {
+                        setSelectedPanchayath(panchayath);
+                        setShowNotes(true);
+                      }} 
                       onPanchayathEdit={panchayath => {
                         setEditingPanchayath(panchayath);
                         setShowCreateForm(true);
                         setActiveTab("create");
                       }} 
                     />
+                    
+                    {showNotes && selectedPanchayath && (
+                      <div className="mt-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-semibold">Panchayath Notes</h3>
+                          <button
+                            onClick={() => {
+                              setShowNotes(false);
+                              setSelectedPanchayath(null);
+                            }}
+                            className="text-muted-foreground hover:text-foreground text-xl"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <PanchayathNotes 
+                          panchayathId={selectedPanchayath.id}
+                          panchayathName={selectedPanchayath.name}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
