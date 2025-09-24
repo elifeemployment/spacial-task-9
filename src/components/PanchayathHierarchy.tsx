@@ -419,51 +419,57 @@ export const PanchayathHierarchy = () => {
                             </div>
 
                             <CollapsibleContent>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-coordinator/10 border border-coordinator/20">
-                                  <div className="h-3 w-3 rounded-full bg-coordinator"></div>
-                                  <div>
-                                    <p className="text-xs text-muted-foreground">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-coordinator/10 border border-coordinator/20 min-h-[60px]">
+                                  <div className="h-3 w-3 rounded-full bg-coordinator flex-shrink-0"></div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-muted-foreground truncate">
                                       Coordinators {showAgentNames.coordinator ? '(Names Shown)' : '(Names Hidden)'}
                                     </p>
-                                    <p className="font-semibold">{panchayath.coordinator_count}</p>
+                                    <p className="font-semibold text-lg">{panchayath.coordinator_count}</p>
                                   </div>
                                 </div>
 
                                 <div 
-                                  className="flex items-center gap-2 p-2 rounded-lg bg-supervisor/10 border border-supervisor/20 cursor-pointer hover:bg-supervisor/20 transition-colors"
+                                  className="flex items-center gap-3 p-3 rounded-lg bg-supervisor/10 border border-supervisor/20 cursor-pointer hover:bg-supervisor/20 transition-colors min-h-[60px]"
                                   onClick={() => handleViewAgents('supervisor', panchayath)}
                                 >
-                                  <div className="h-3 w-3 rounded-full bg-supervisor"></div>
-                                  <div className="flex-1">
-                                    <p className="text-xs text-muted-foreground">
+                                  <div className="h-3 w-3 rounded-full bg-supervisor flex-shrink-0"></div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-muted-foreground truncate">
                                       Supervisors {showAgentNames.supervisor ? '(Names Shown)' : '(Names Hidden)'}
                                     </p>
-                                    <p className="font-semibold">{panchayath.supervisor_count}</p>
+                                    <p className="font-semibold text-lg">{panchayath.supervisor_count}</p>
                                   </div>
-                                  <Edit className="h-3 w-3 text-muted-foreground" />
+                                  <Edit className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                 </div>
+                              </div>
 
-                                <div className="p-2 rounded-lg bg-group-leader/10 border border-group-leader/20">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-3 w-3 rounded-full bg-group-leader"></div>
-                                    <div className="flex-1">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div className="p-3 rounded-lg bg-group-leader/10 border border-group-leader/20">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <div className="h-3 w-3 rounded-full bg-group-leader flex-shrink-0"></div>
+                                    <div className="flex-1 min-w-0">
                                       <p className="text-xs text-muted-foreground">Group Leaders</p>
-                                      <p className="font-semibold">{panchayath.group_leader_count}</p>
+                                      <p className="font-semibold text-lg">{panchayath.group_leader_count}</p>
                                     </div>
                                   </div>
-                                  <GroupLeadersBySupervisor panchayathId={panchayath.id} />
+                                  <div className="mt-2">
+                                    <GroupLeadersBySupervisor panchayathId={panchayath.id} />
+                                  </div>
                                 </div>
 
-                                <div className="p-2 rounded-lg bg-pro/10 border border-pro/20">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-3 w-3 rounded-full bg-pro"></div>
-                                    <div className="flex-1">
+                                <div className="p-3 rounded-lg bg-pro/10 border border-pro/20">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <div className="h-3 w-3 rounded-full bg-pro flex-shrink-0"></div>
+                                    <div className="flex-1 min-w-0">
                                       <p className="text-xs text-muted-foreground">PROs</p>
-                                      <p className="font-semibold">{panchayath.pro_count}</p>
+                                      <p className="font-semibold text-lg">{panchayath.pro_count}</p>
                                     </div>
                                   </div>
-                                  <ProsByGroupLeader panchayathId={panchayath.id} />
+                                  <div className="mt-2">
+                                    <ProsByGroupLeader panchayathId={panchayath.id} />
+                                  </div>
                                 </div>
                               </div>
                             </CollapsibleContent>
