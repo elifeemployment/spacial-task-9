@@ -345,10 +345,10 @@ export const PanchayathHierarchy = () => {
                     />
                   </div>
 
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     {filteredPanchayaths.map((panchayath) => (
                       <Collapsible key={panchayath.id} open={expandedCards[panchayath.id] ?? true}>
-                        <Card className="border border-border hover:border-primary/40 transition-colors">
+                        <Card className="w-full border border-border hover:border-primary/40 transition-colors shadow-sm">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start mb-4">
                               <div className="flex-1">
