@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +20,7 @@ interface ProsByGroupLeaderProps {
 export const ProsByGroupLeader = ({ panchayathId }: ProsByGroupLeaderProps) => {
   const [groupLeaderData, setGroupLeaderData] = useState<GroupLeaderWithProCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,23 +71,36 @@ export const ProsByGroupLeader = ({ panchayathId }: ProsByGroupLeaderProps) => {
     );
   }
 
+  const totalPros = groupLeaderData.reduce((sum, groupLeader) => sum + groupLeader.pro_count, 0);
+
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground mb-2">PROs by Group Leader:</p>
-      {groupLeaderData.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No group leaders found</p>
-      ) : (
-        <div className="space-y-1">
-          {groupLeaderData.map((groupLeader) => (
-            <div key={groupLeader.id} className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground truncate flex-1 mr-2">{groupLeader.name}</span>
-              <Badge variant="outline" className="text-xs h-5 px-2">
-                {groupLeader.pro_count}
-              </Badge>
-            </div>
-          ))}
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="h-auto p-0 w-full justify-start text-xs">
+          <div className="flex items-center gap-2 w-full">
+            {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            <span className="font-medium text-muted-foreground">
+              Breakdown: {groupLeaderData.length} group leaders, {totalPros} PROs
+            </span>
+          </div>
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2">
+        <div className="space-y-1 pl-4">
+          {groupLeaderData.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No group leaders found</p>
+          ) : (
+            groupLeaderData.map((groupLeader) => (
+              <div key={groupLeader.id} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground truncate flex-1 mr-2">{groupLeader.name}</span>
+                <Badge variant="outline" className="text-xs h-5 px-2">
+                  {groupLeader.pro_count}
+                </Badge>
+              </div>
+            ))
+          )}
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };

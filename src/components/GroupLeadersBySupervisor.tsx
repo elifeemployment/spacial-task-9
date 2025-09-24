@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +20,7 @@ interface GroupLeadersBySuperviserProps {
 export const GroupLeadersBySupervisor = ({ panchayathId }: GroupLeadersBySuperviserProps) => {
   const [supervisorData, setSupervisorData] = useState<SupervisorWithGroupLeaderCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,23 +71,36 @@ export const GroupLeadersBySupervisor = ({ panchayathId }: GroupLeadersBySupervi
     );
   }
 
+  const totalGroupLeaders = supervisorData.reduce((sum, supervisor) => sum + supervisor.group_leader_count, 0);
+
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground mb-2">Group Leaders by Supervisor:</p>
-      {supervisorData.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No supervisors found</p>
-      ) : (
-        <div className="space-y-1">
-          {supervisorData.map((supervisor) => (
-            <div key={supervisor.id} className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground truncate flex-1 mr-2">{supervisor.name}</span>
-              <Badge variant="outline" className="text-xs h-5 px-2">
-                {supervisor.group_leader_count}
-              </Badge>
-            </div>
-          ))}
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="h-auto p-0 w-full justify-start text-xs">
+          <div className="flex items-center gap-2 w-full">
+            {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            <span className="font-medium text-muted-foreground">
+              Breakdown: {supervisorData.length} supervisors, {totalGroupLeaders} group leaders
+            </span>
+          </div>
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2">
+        <div className="space-y-1 pl-4">
+          {supervisorData.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No supervisors found</p>
+          ) : (
+            supervisorData.map((supervisor) => (
+              <div key={supervisor.id} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground truncate flex-1 mr-2">{supervisor.name}</span>
+                <Badge variant="outline" className="text-xs h-5 px-2">
+                  {supervisor.group_leader_count}
+                </Badge>
+              </div>
+            ))
+          )}
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
