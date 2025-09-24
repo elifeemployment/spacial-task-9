@@ -11,6 +11,8 @@ import { PanchayathChart } from "@/components/PanchayathChart";
 import { PanchayathForm } from "@/components/PanchayathForm";
 import { SupervisorForm } from "@/components/SupervisorForm";
 import { GroupLeaderForm } from "@/components/GroupLeaderForm";
+import { GroupLeadersBySupervisor } from "@/components/GroupLeadersBySupervisor";
+import { ProsByGroupLeader } from "@/components/ProsByGroupLeader";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -442,28 +444,26 @@ export const PanchayathHierarchy = () => {
                                   <Edit className="h-3 w-3 text-muted-foreground" />
                                 </div>
 
-                                <div 
-                                  className="flex items-center gap-2 p-2 rounded-lg bg-group-leader/10 border border-group-leader/20 cursor-pointer hover:bg-group-leader/20 transition-colors"
-                                  onClick={() => handleViewAgents('group_leader', panchayath)}
-                                >
-                                  <div className="h-3 w-3 rounded-full bg-group-leader"></div>
-                                  <div className="flex-1">
-                                    <p className="text-xs text-muted-foreground">
-                                      Group Leaders {showAgentNames.group_leader ? '(Names Shown)' : '(Names Hidden)'}
-                                    </p>
-                                    <p className="font-semibold">{panchayath.group_leader_count}</p>
+                                <div className="p-2 rounded-lg bg-group-leader/10 border border-group-leader/20">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-3 w-3 rounded-full bg-group-leader"></div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-muted-foreground">Group Leaders</p>
+                                      <p className="font-semibold">{panchayath.group_leader_count}</p>
+                                    </div>
                                   </div>
-                                  <Edit className="h-3 w-3 text-muted-foreground" />
+                                  <GroupLeadersBySupervisor panchayathId={panchayath.id} />
                                 </div>
 
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-pro/10 border border-pro/20">
-                                  <div className="h-3 w-3 rounded-full bg-pro"></div>
-                                  <div>
-                                    <p className="text-xs text-muted-foreground">
-                                      PROs {showAgentNames.pro ? '(Names Shown)' : '(Names Hidden)'}
-                                    </p>
-                                    <p className="font-semibold">{panchayath.pro_count}</p>
+                                <div className="p-2 rounded-lg bg-pro/10 border border-pro/20">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-3 w-3 rounded-full bg-pro"></div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-muted-foreground">PROs</p>
+                                      <p className="font-semibold">{panchayath.pro_count}</p>
+                                    </div>
                                   </div>
+                                  <ProsByGroupLeader panchayathId={panchayath.id} />
                                 </div>
                               </div>
                             </CollapsibleContent>
