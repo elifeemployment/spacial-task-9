@@ -17,8 +17,6 @@ export interface CustomerFormProps {
 }
 
 export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editingCustomer, onEditComplete }: CustomerFormProps) => {
-  const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
   const [ward, setWard] = useState("");
   const [proId, setProId] = useState("");
   const [customerCount, setCustomerCount] = useState(1);
@@ -44,8 +42,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
 
   useEffect(() => {
     if (editingCustomer) {
-      setName(editingCustomer.name);
-      setMobile(editingCustomer.mobile_number);
       setWard(editingCustomer.ward.toString());
       setProId(editingCustomer.pro_id);
       setCustomerCount(editingCustomer.customer_count || 1);
@@ -118,7 +114,7 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
     // For editing, get panchayath ID from either editing data or state
     const effectivePanchayathId = isEditing ? (editingCustomer?.panchayath_id || panchayathId) : panchayathId;
     
-    if (!name.trim() || !mobile.trim() || !ward || !proId || (!effectivePanchayathId && !isEditing)) {
+    if (!ward || !proId || (!effectivePanchayathId && !isEditing)) {
       toast({
         title: "Error",
         description: isEditing 
@@ -130,15 +126,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
     }
 
     const wardNum = parseInt(ward);
-    // Validate mobile number (exactly 10 digits)
-    if (!/^\d{10}$/.test(mobile.trim())) {
-      toast({
-        title: "Error",
-        description: "Mobile number must be exactly 10 digits",
-        variant: "destructive",
-      });
-      return;
-    }
 
     if (isNaN(wardNum) || wardNum < 1 || wardNum > selectedPanchayath.number_of_wards) {
       toast({
@@ -156,8 +143,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
           .from("customers" as any)
           .update({
             pro_id: proId,
-            name: name.trim(),
-            mobile_number: mobile.trim(),
             ward: wardNum,
             customer_count: customerCount,
           })
@@ -181,8 +166,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
           .insert({
             panchayath_id: panchayathId,
             pro_id: proId,
-            name: name.trim(),
-            mobile_number: mobile.trim(),
             ward: wardNum,
             customer_count: customerCount,
           });
@@ -192,8 +175,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
         // Prepare agent details for confirmation
         const selectedPro = pros.find(p => p.id === proId);
         const agentDetails = {
-          name: name.trim(),
-          mobile: mobile.trim(),
           ward: wardNum,
           panchayath: selectedPanchayath.name,
           role: "Customer",
@@ -205,8 +186,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
         setShowConfirmation(true);
         
         // Reset form fields
-        setName("");
-        setMobile("");
         setWard("");
         setProId("");
         setCustomerCount(1);
@@ -284,34 +263,6 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
               </div>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="customer-name">Name</Label>
-                <Input
-                  id="customer-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer-mobile">Mobile Number</Label>
-                <Input
-                  id="customer-mobile"
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setMobile(value);
-                  }}
-                  placeholder="Enter 10-digit mobile number"
-                  maxLength={10}
-                  required
-                />
-              </div>
-            </div>
             
             <div className="space-y-2">
               <Label>Select Ward</Label>
