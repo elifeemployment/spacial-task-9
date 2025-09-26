@@ -77,6 +77,10 @@ export default {
 				pro: {
 					DEFAULT: 'hsl(var(--pro))',
 					foreground: 'hsl(var(--pro-foreground))'
+				},
+				customer: {
+					DEFAULT: 'hsl(var(--customer))',
+					foreground: 'hsl(var(--customer-foreground))'
 				}
 			},
 			backgroundImage: {

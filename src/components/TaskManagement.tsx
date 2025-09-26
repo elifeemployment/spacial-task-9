@@ -6,6 +6,7 @@ import { CoordinatorForm } from "@/components/CoordinatorForm";
 import { SupervisorForm } from "@/components/SupervisorForm";
 import { GroupLeaderForm } from "@/components/GroupLeaderForm";
 import { ProForm } from "@/components/ProForm";
+import { CustomerForm } from "@/components/CustomerForm";
 import { AgentsList } from "@/components/AgentsList";
 import { User } from "@/lib/authService";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
@@ -43,6 +44,11 @@ export const TaskManagement = ({ currentUser }: TaskManagementProps) => {
     label: "PRO",
     color: "bg-pro",
     description: "Public Relations Officers under group leaders"
+  }, {
+    key: "customer",
+    label: "Customer",
+    color: "bg-customer",
+    description: "Manage customer counts with PRO assignment"
   }];
   return <div className="space-y-6">
       <Card className="border-2 border-primary/20 shadow-lg">
@@ -95,7 +101,7 @@ export const TaskManagement = ({ currentUser }: TaskManagementProps) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
                       {roleCards.map(({
                     key,
                     label,
@@ -150,6 +156,7 @@ export const TaskManagement = ({ currentUser }: TaskManagementProps) => {
                               {selectedRole === "supervisor" && <SupervisorForm selectedPanchayath={selectedPanchayath} />}
                               {selectedRole === "group-leader" && <GroupLeaderForm selectedPanchayath={selectedPanchayath} />}
                               {selectedRole === "pro" && <ProForm selectedPanchayath={selectedPanchayath} />}
+                              {selectedRole === "customer" && <CustomerForm selectedPanchayath={selectedPanchayath} />}
                             </>
                           )}
                         </CardContent>

@@ -67,6 +67,8 @@ All colors MUST be HSL.
     --group-leader-foreground: 0 0% 100%;
     --pro: 280 70% 50%;
     --pro-foreground: 0 0% 100%;
+    --customer: 10 80% 60%;
+    --customer-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -122,6 +124,8 @@ All colors MUST be HSL.
     --group-leader-foreground: 240 15% 8%;
     --pro: 280 70% 60%;
     --pro-foreground: 240 15% 8%;
+    --customer: 10 80% 70%;
+    --customer-foreground: 240 15% 8%;
   }
 }
 
