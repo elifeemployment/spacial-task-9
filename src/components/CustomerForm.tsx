@@ -27,6 +27,8 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmedAgentDetails, setConfirmedAgentDetails] = useState<any>(null);
+  const [existingCustomer, setExistingCustomer] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const isEditing = !!editingCustomer;
   const { toast } = useToast();
 
@@ -69,6 +71,17 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
     }
   }, [ward, panchayathId]);
 
+  // Fetch existing customer data when both ward and PRO are selected
+  useEffect(() => {
+    if (ward && proId && panchayathId && !isEditing) {
+      fetchExistingCustomer();
+    } else if (!isEditing) {
+      setExistingCustomer(null);
+      setIsEditMode(false);
+      setCustomerCount(1);
+    }
+  }, [ward, proId, panchayathId, isEditing]);
+
   const fetchPanchayaths = async () => {
     try {
       const { data, error } = await supabase
@@ -100,12 +113,56 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
     }
   };
 
+  const fetchExistingCustomer = async () => {
+    if (!ward || !proId || !panchayathId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("panchayath_id", panchayathId)
+        .eq("pro_id", proId)
+        .eq("ward", parseInt(ward))
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setExistingCustomer(data);
+        setCustomerCount(data.customer_count);
+      } else {
+        setExistingCustomer(null);
+        setCustomerCount(1);
+      }
+    } catch (error) {
+      console.error("Error fetching existing customer:", error);
+      setExistingCustomer(null);
+      setCustomerCount(1);
+    }
+  };
+
+  const handleEditMode = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    if (existingCustomer) {
+      setCustomerCount(existingCustomer.customer_count);
+    }
+  };
+
   const incrementCount = () => {
     setCustomerCount(prev => prev + 1);
   };
 
   const decrementCount = () => {
-    setCustomerCount(prev => Math.max(1, prev - 1));
+    if (isEditMode && existingCustomer) {
+      // In edit mode, allow decrementing to 0 to delete the record
+      setCustomerCount(prev => Math.max(0, prev - 1));
+    } else {
+      setCustomerCount(prev => Math.max(1, prev - 1));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,7 +217,43 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
         });
         
         onEditComplete?.();
+      } else if (isEditMode && existingCustomer) {
+        // Update existing customer record
+        if (customerCount === 0) {
+          // Delete the record if count is 0
+          const { error } = await supabase
+            .from("customers")
+            .delete()
+            .eq("id", existingCustomer.id);
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: "Customer record deleted successfully",
+          });
+        } else {
+          // Update the existing record
+          const { error } = await supabase
+            .from("customers")
+            .update({
+              customer_count: customerCount,
+            })
+            .eq("id", existingCustomer.id);
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: "Customer count updated successfully",
+          });
+        }
+
+        // Reset edit mode and refresh data
+        setIsEditMode(false);
+        fetchExistingCustomer();
       } else {
+        // Add new customer record
         const { error } = await supabase
           .from("customers" as any)
           .insert({
@@ -298,6 +391,38 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
               </div>
             )}
 
+            {/* Show existing customer info if found */}
+            {existingCustomer && !isEditing && (
+              <div className="space-y-2">
+                <Label>Existing Customer Data</Label>
+                <div className="p-3 bg-muted rounded-md border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium">Current Count: </span>
+                      <span className="text-lg font-bold">{existingCustomer.customer_count}</span>
+                    </div>
+                    {!isEditMode && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleEditMode}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                  {isEditMode && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        You can now modify the customer count. Set to 0 to delete this record.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Customer Count</Label>
               <div className="flex items-center gap-3">
@@ -306,7 +431,11 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
                   variant="outline"
                   size="sm"
                   onClick={decrementCount}
-                  disabled={customerCount <= 1}
+                  disabled={
+                    (isEditMode && existingCustomer) 
+                      ? customerCount <= 0 
+                      : customerCount <= 1
+                  }
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -318,20 +447,44 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
                   variant="outline"
                   size="sm"
                   onClick={incrementCount}
+                  disabled={existingCustomer && !isEditMode}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              {isEditMode && customerCount === 0 && (
+                <p className="text-sm text-destructive">
+                  Setting count to 0 will delete this customer record.
+                </p>
+              )}
             </div>
 
-            <Button type="submit" disabled={loading}>
-              {loading ? (isEditing ? "Updating..." : "Adding...") : (isEditing ? "Update Customer" : "Add Customer")}
-            </Button>
-            {isEditing && (
-              <Button type="button" variant="outline" onClick={onEditComplete}>
-                Cancel
+            <div className="flex gap-2">
+              <Button 
+                type="submit" 
+                disabled={loading || (existingCustomer && !isEditMode && !isEditing)}
+              >
+                {loading ? (
+                  isEditing ? "Updating..." : isEditMode ? "Updating..." : "Adding..."
+                ) : (
+                  isEditing ? "Update Customer" : 
+                  isEditMode ? (customerCount === 0 ? "Delete Customer" : "Update Count") : 
+                  "Add Customer"
+                )}
               </Button>
-            )}
+              
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={onEditComplete}>
+                  Cancel
+                </Button>
+              )}
+              
+              {isEditMode && !isEditing && (
+                <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
