@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, ChevronRight, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -167,30 +168,32 @@ export const ProsByGroupLeader = ({ panchayathId }: ProsByGroupLeaderProps) => {
                       </div>
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-1">
-                    <div className="space-y-1 pl-4">
-                      {groupLeader.pros?.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No PROs found</p>
-                      ) : (
-                        groupLeader.pros?.map((pro) => (
-                          <Card key={pro.id} className="p-2 bg-muted/30 border-muted">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium truncate">{pro.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Ward {pro.ward} • {pro.mobile_number}
-                                </p>
-                              </div>
-                              <Badge variant="secondary" className="text-xs h-5 px-2 ml-2">
-                                <Users className="h-3 w-3 mr-1" />
-                                {pro.total_customers}
-                              </Badge>
-                            </div>
-                          </Card>
-                        ))
-                      )}
-                    </div>
-                  </CollapsibleContent>
+                   <CollapsibleContent className="mt-1">
+                     <ScrollArea className="h-48 w-full">
+                       <div className="space-y-1 pl-4 pr-4">
+                         {groupLeader.pros?.length === 0 ? (
+                           <p className="text-xs text-muted-foreground">No PROs found</p>
+                         ) : (
+                           groupLeader.pros?.map((pro) => (
+                             <Card key={pro.id} className="p-2 bg-muted/30 border-muted">
+                               <div className="flex items-center justify-between">
+                                 <div className="flex-1 min-w-0">
+                                   <p className="text-xs font-medium truncate">{pro.name}</p>
+                                   <p className="text-xs text-muted-foreground">
+                                     Ward {pro.ward} • {pro.mobile_number}
+                                   </p>
+                                 </div>
+                                 <Badge variant="secondary" className="text-xs h-5 px-2 ml-2">
+                                   <Users className="h-3 w-3 mr-1" />
+                                   {pro.total_customers}
+                                 </Badge>
+                               </div>
+                             </Card>
+                           ))
+                         )}
+                       </div>
+                     </ScrollArea>
+                   </CollapsibleContent>
                 </Collapsible>
               </div>
             ))
