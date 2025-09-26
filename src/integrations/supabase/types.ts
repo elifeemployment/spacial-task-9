@@ -126,6 +126,39 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_count: number
+          id: string
+          panchayath_id: string
+          pro_id: string
+          updated_at: string
+          ward: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_count?: number
+          id?: string
+          panchayath_id: string
+          pro_id: string
+          updated_at?: string
+          ward: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_count?: number
+          id?: string
+          panchayath_id?: string
+          pro_id?: string
+          updated_at?: string
+          ward?: number
+        }
+        Relationships: []
+      }
       daily_notes: {
         Row: {
           activity: string | null
@@ -236,6 +269,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      panchayath_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note_text: string
+          panchayath_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note_text: string
+          panchayath_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note_text?: string
+          panchayath_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panchayath_notes_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       panchayaths: {
         Row: {
