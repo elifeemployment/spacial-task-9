@@ -135,16 +135,19 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
         .eq("panchayath_id", panchayathId)
         .eq("pro_id", proId)
         .eq("ward", parseInt(ward))
-        .maybeSingle();
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
-      console.log("fetchExistingCustomer: Query result", { data, error });
+      console.log("fetchExistingCustomer: Query result (array)", { data, error });
 
       if (error) throw error;
       
-      if (data) {
-        console.log("fetchExistingCustomer: Found existing customer", data);
-        setExistingCustomer(data);
-        setCustomerCount(data.customer_count);
+      const record = data && data.length > 0 ? data[0] : null;
+
+      if (record) {
+        console.log("fetchExistingCustomer: Found existing customer", record);
+        setExistingCustomer(record);
+        setCustomerCount(record.customer_count);
       } else {
         console.log("fetchExistingCustomer: No existing customer found");
         setExistingCustomer(null);
