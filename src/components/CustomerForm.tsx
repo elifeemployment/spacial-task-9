@@ -73,9 +73,12 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
 
   // Fetch existing customer data when both ward and PRO are selected
   useEffect(() => {
+    console.log("useEffect triggered", { ward, proId, panchayathId, isEditing });
     if (ward && proId && panchayathId && !isEditing) {
+      console.log("Calling fetchExistingCustomer");
       fetchExistingCustomer();
     } else if (!isEditing) {
+      console.log("Resetting existing customer data");
       setExistingCustomer(null);
       setIsEditMode(false);
       setCustomerCount(1);
@@ -114,7 +117,16 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
   };
 
   const fetchExistingCustomer = async () => {
-    if (!ward || !proId || !panchayathId) return;
+    if (!ward || !proId || !panchayathId) {
+      console.log("fetchExistingCustomer: Missing required fields", { ward, proId, panchayathId });
+      return;
+    }
+    
+    console.log("fetchExistingCustomer: Searching for customer", { 
+      ward: parseInt(ward), 
+      proId, 
+      panchayathId 
+    });
     
     try {
       const { data, error } = await supabase
@@ -125,12 +137,16 @@ export const CustomerForm = ({ selectedPanchayath: preSelectedPanchayath, editin
         .eq("ward", parseInt(ward))
         .maybeSingle();
 
+      console.log("fetchExistingCustomer: Query result", { data, error });
+
       if (error) throw error;
       
       if (data) {
+        console.log("fetchExistingCustomer: Found existing customer", data);
         setExistingCustomer(data);
         setCustomerCount(data.customer_count);
       } else {
+        console.log("fetchExistingCustomer: No existing customer found");
         setExistingCustomer(null);
         setCustomerCount(1);
       }
