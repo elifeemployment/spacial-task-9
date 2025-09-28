@@ -271,27 +271,52 @@ export const TodoList = () => {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
-      
-      const { error } = await supabase
-        .from('todos')
-        .insert([{
+      if (newTaskAssignee === 'all_members') {
+        // Create task for each admin member
+        const tasksToInsert = adminMembers.map(member => ({
           text: singleTaskText,
           status: 'unfinished',
           remarks: null,
           created_by: user?.id || null,
-          assigned_to: assignedTo
-        }]);
+          assigned_to: member.id
+        }));
 
-      if (error) throw error;
-      
-      setSingleTaskText('');
-      setNewTaskAssignee('unassigned');
-      await loadTasks();
-      toast({
-        title: "Success",
-        description: "Task added successfully",
-      });
+        const { error } = await supabase
+          .from('todos')
+          .insert(tasksToInsert);
+
+        if (error) throw error;
+        
+        setSingleTaskText('');
+        setNewTaskAssignee('unassigned');
+        await loadTasks();
+        toast({
+          title: "Success",
+          description: `Task assigned to all ${adminMembers.length} team members successfully`,
+        });
+      } else {
+        const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
+        
+        const { error } = await supabase
+          .from('todos')
+          .insert([{
+            text: singleTaskText,
+            status: 'unfinished',
+            remarks: null,
+            created_by: user?.id || null,
+            assigned_to: assignedTo
+          }]);
+
+        if (error) throw error;
+        
+        setSingleTaskText('');
+        setNewTaskAssignee('unassigned');
+        await loadTasks();
+        toast({
+          title: "Success",
+          description: "Task added successfully",
+        });
+      }
     } catch (error) {
       console.error('Error adding task:', error);
       toast({
@@ -310,29 +335,60 @@ export const TodoList = () => {
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
       
-      const newTasks = taskTexts.map(text => ({
-        text,
-        status: 'unfinished' as const,
-        remarks: null,
-        created_by: user?.id || null,
-        assigned_to: assignedTo
-      }));
+      if (newTaskAssignee === 'all_members') {
+        // Create each task for each admin member
+        const newTasks = [];
+        taskTexts.forEach(taskText => {
+          adminMembers.forEach(member => {
+            newTasks.push({
+              text: taskText,
+              status: 'unfinished' as const,
+              remarks: null,
+              created_by: user?.id || null,
+              assigned_to: member.id
+            });
+          });
+        });
 
-      const { error } = await supabase
-        .from('todos')
-        .insert(newTasks);
+        const { error } = await supabase
+          .from('todos')
+          .insert(newTasks);
 
-      if (error) throw error;
-      
-      setMultiTaskText('');
-      setNewTaskAssignee('unassigned');
-      await loadTasks();
-      toast({
-        title: "Success",
-        description: `${taskTexts.length} tasks added successfully`,
-      });
+        if (error) throw error;
+        
+        setMultiTaskText('');
+        setNewTaskAssignee('unassigned');
+        await loadTasks();
+        toast({
+          title: "Success",
+          description: `${taskTexts.length} tasks assigned to all ${adminMembers.length} team members successfully (${newTasks.length} total tasks created)`,
+        });
+      } else {
+        const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
+        
+        const newTasks = taskTexts.map(text => ({
+          text,
+          status: 'unfinished' as const,
+          remarks: null,
+          created_by: user?.id || null,
+          assigned_to: assignedTo
+        }));
+
+        const { error } = await supabase
+          .from('todos')
+          .insert(newTasks);
+
+        if (error) throw error;
+        
+        setMultiTaskText('');
+        setNewTaskAssignee('unassigned');
+        await loadTasks();
+        toast({
+          title: "Success",
+          description: `${taskTexts.length} tasks added successfully`,
+        });
+      }
     } catch (error) {
       console.error('Error adding tasks:', error);
       toast({
@@ -949,19 +1005,25 @@ export const TodoList = () => {
               {/* Assign To Dropdown - Optional */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Assign To (Optional)</label>
-                <Select value={newTaskAssignee} onValueChange={setNewTaskAssignee}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team member (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {adminMembers.map(member => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name} - {member.mobile}
+                  <Select value={newTaskAssignee} onValueChange={setNewTaskAssignee}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select team member (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      <SelectItem value="all_members">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Assign to All Team Members
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {adminMembers.map(member => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} - {member.mobile}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
               </div>
             </div>
           )}
@@ -987,6 +1049,12 @@ export const TodoList = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
+                      <SelectItem value="all_members">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Assign to All Team Members
+                        </div>
+                      </SelectItem>
                       {adminMembers.map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name} - {member.mobile}
