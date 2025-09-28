@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Plus, Edit3, Save, X } from "lucide-react";
+import { Plus, Edit3, Save, X, Trash2 } from "lucide-react";
 
 interface PanchayathNotesProps {
   panchayathId: string;
@@ -128,6 +128,31 @@ export const PanchayathNotes = ({ panchayathId, panchayathName }: PanchayathNote
     setEditText("");
   };
 
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      const { error } = await supabase
+        .from("panchayath_notes" as any)
+        .delete()
+        .eq("id", noteId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
+
+      fetchNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-6">
@@ -220,14 +245,24 @@ export const PanchayathNotes = ({ panchayathId, panchayathName }: PanchayathNote
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <p className="text-sm leading-relaxed flex-1">{note.note_text}</p>
-                        <Button
-                          onClick={() => startEdit(note)}
-                          size="sm"
-                          variant="ghost"
-                          className="ml-2 h-8 w-8 p-0"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1 ml-2">
+                          <Button
+                            onClick={() => startEdit(note)}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteNote(note.id)}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>Added: {format(new Date(note.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
