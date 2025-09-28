@@ -25,6 +25,8 @@ interface Task {
   assigned_to?: string | null;
   reassigned_to_coordinator?: string | null;
   reassigned_to_supervisor?: string | null;
+  assigned_to_all?: boolean;
+  finished_by_member_id?: string | null;
   assigned_member?: {
     id: string;
     name: string;
@@ -39,6 +41,11 @@ interface Task {
     id: string;
     name: string;
     mobile_number: string;
+  } | null;
+  finished_by_member?: {
+    id: string;
+    name: string;
+    mobile: string;
   } | null;
 }
 
@@ -92,6 +99,8 @@ export const TodoList = () => {
   const [reassigningTask, setReassigningTask] = useState<string | null>(null);
   const [selectedReassignee, setSelectedReassignee] = useState<string>('unassigned');
   const [reassigneeType, setReassigneeType] = useState<'coordinator' | 'supervisor'>('coordinator');
+  const [finishingMember, setFinishingMember] = useState<string>('');
+  const [showMemberSelection, setShowMemberSelection] = useState(false);
   const { toast } = useToast();
 
   const isRequested = (task: Task) => task.status !== 'finished' && (task.remarks?.toLowerCase().includes('requested completion') ?? false);
@@ -272,18 +281,16 @@ export const TodoList = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (newTaskAssignee === 'all_members') {
-        // Create task for each admin member
-        const tasksToInsert = adminMembers.map(member => ({
-          text: singleTaskText,
-          status: 'unfinished',
-          remarks: null,
-          created_by: user?.id || null,
-          assigned_to: member.id
-        }));
-
+        // Create single task assigned to all members
         const { error } = await supabase
           .from('todos')
-          .insert(tasksToInsert);
+          .insert([{
+            text: singleTaskText,
+            status: 'unfinished',
+            remarks: null,
+            created_by: user?.id || null,
+            assigned_to: 'all_members'
+          }]);
 
         if (error) throw error;
         
@@ -292,7 +299,7 @@ export const TodoList = () => {
         await loadTasks();
         toast({
           title: "Success",
-          description: `Task assigned to all ${adminMembers.length} team members successfully`,
+          description: `Task assigned to all team members successfully`,
         });
       } else {
         const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
@@ -337,19 +344,14 @@ export const TodoList = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (newTaskAssignee === 'all_members') {
-        // Create each task for each admin member
-        const newTasks = [];
-        taskTexts.forEach(taskText => {
-          adminMembers.forEach(member => {
-            newTasks.push({
-              text: taskText,
-              status: 'unfinished' as const,
-              remarks: null,
-              created_by: user?.id || null,
-              assigned_to: member.id
-            });
-          });
-        });
+        // Create each task assigned to all members
+        const newTasks = taskTexts.map(text => ({
+          text,
+          status: 'unfinished' as const,
+          remarks: null,
+          created_by: user?.id || null,
+          assigned_to: 'all_members'
+        }));
 
         const { error } = await supabase
           .from('todos')
@@ -362,7 +364,7 @@ export const TodoList = () => {
         await loadTasks();
         toast({
           title: "Success",
-          description: `${taskTexts.length} tasks assigned to all ${adminMembers.length} team members successfully (${newTasks.length} total tasks created)`,
+          description: `${taskTexts.length} tasks assigned to all team members successfully`,
         });
       } else {
         const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
@@ -404,22 +406,37 @@ export const TodoList = () => {
     if (!task) return;
 
     if (task.status === 'unfinished') {
-      // Show popup for remarks when finishing
-      setFinishingTask(taskId);
-      setFinishRemarks(task.remarks || '');
+      // Check if task is assigned to all members
+      if (task.assigned_to === 'all_members') {
+        // Show member selection dialog first
+        setFinishingTask(taskId);
+        setFinishRemarks(task.remarks || '');
+        setShowMemberSelection(true);
+        setFinishingMember('');
+      } else {
+        // Show popup for remarks when finishing
+        setFinishingTask(taskId);
+        setFinishRemarks(task.remarks || '');
+        setShowMemberSelection(false);
+      }
     } else {
       // Mark as unfinished
       updateTaskStatus(taskId, 'unfinished', task.remarks || '');
     }
   };
 
-  const updateTaskStatus = async (taskId: string, status: 'finished' | 'unfinished' | 'requested', remarks: string) => {
+  const updateTaskStatus = async (taskId: string, status: 'finished' | 'unfinished' | 'requested', remarks: string, finishedByMemberId?: string) => {
     try {
       const updateData: any = { 
         status, 
         remarks: remarks || null,
         finished_at: status === 'finished' ? new Date().toISOString() : null
       };
+
+      // If finished and member is specified, add the member who finished it
+      if (status === 'finished' && finishedByMemberId) {
+        updateData.assigned_to = finishedByMemberId;
+      }
 
       const { error } = await supabase
         .from('todos')
@@ -446,9 +463,21 @@ export const TodoList = () => {
   const confirmFinishTask = () => {
     if (!finishingTask) return;
     
-    updateTaskStatus(finishingTask, 'finished', finishRemarks);
+    // If showing member selection, require member to be selected
+    if (showMemberSelection && !finishingMember) {
+      toast({
+        title: "Error",
+        description: "Please select a member who is finishing this task",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateTaskStatus(finishingTask, 'finished', finishRemarks, showMemberSelection ? finishingMember : undefined);
     setFinishingTask(null);
     setFinishRemarks('');
+    setShowMemberSelection(false);
+    setFinishingMember('');
   };
 
   const updateTaskRemarks = async (taskId: string, remarks: string) => {
@@ -523,6 +552,8 @@ export const TodoList = () => {
   const cancelFinishing = () => {
     setFinishingTask(null);
     setFinishRemarks('');
+    setShowMemberSelection(false);
+    setFinishingMember('');
   };
 
   const startDeleting = (taskId: string) => {
@@ -1319,20 +1350,27 @@ export const TodoList = () => {
                                </Badge>
                             </TableCell>
                              <TableCell>
-                               <div className="space-y-1">
-                                 {task.assigned_member ? (
-                                   <div className="flex items-center gap-2">
-                                     <Badge variant="outline" className="text-xs">
-                                       <UserCheck className="h-3 w-3 mr-1" />
-                                       {task.assigned_member.name}
-                                     </Badge>
-                                     <span className="text-xs text-muted-foreground">
-                                       {task.assigned_member.mobile}
-                                     </span>
-                                   </div>
-                                 ) : (
-                                   <span className="text-sm text-muted-foreground">Not assigned</span>
-                                 )}
+                                <div className="space-y-1">
+                                  {task.assigned_to === 'all_members' ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary" className="text-xs">
+                                        <Users className="h-3 w-3 mr-1" />
+                                        All Members
+                                      </Badge>
+                                    </div>
+                                  ) : task.assigned_member ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        <UserCheck className="h-3 w-3 mr-1" />
+                                        {task.assigned_member.name}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">
+                                        {task.assigned_member.mobile}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">Not assigned</span>
+                                  )}
                                  <Button
                                    size="sm"
                                    variant="ghost"
@@ -1575,21 +1613,28 @@ export const TodoList = () => {
                                </Badge>
                             </TableCell>
                              <TableCell>
-                               <div className="space-y-1">
-                                 {task.assigned_member ? (
-                                   <div className="flex items-center gap-2">
-                                     <Badge variant="outline" className="text-xs">
-                                       <UserCheck className="h-3 w-3 mr-1" />
-                                       {task.assigned_member.name}
-                                     </Badge>
-                                     <span className="text-xs text-muted-foreground">
-                                       {task.assigned_member.mobile}
-                                     </span>
-                                   </div>
-                                 ) : (
-                                   <span className="text-sm text-muted-foreground">Not assigned</span>
-                                 )}
-                               </div>
+                                <div className="space-y-1">
+                                  {task.assigned_to === 'all_members' ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary" className="text-xs">
+                                        <Users className="h-3 w-3 mr-1" />
+                                        All Members
+                                      </Badge>
+                                    </div>
+                                  ) : task.assigned_member ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        <UserCheck className="h-3 w-3 mr-1" />
+                                        {task.assigned_member.name}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">
+                                        {task.assigned_member.mobile}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">Not assigned</span>
+                                  )}
+                                </div>
                              </TableCell>
                              <TableCell>
                                <div className="space-y-1">
@@ -1829,16 +1874,47 @@ export const TodoList = () => {
           <DialogHeader>
             <DialogTitle>Finish Task</DialogTitle>
             <DialogDescription>
-              Add remarks for completing this task (optional).
+              {showMemberSelection 
+                ? "Select which team member is finishing this task."
+                : "Add remarks for completing this task (optional)."
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Textarea
-              placeholder="Add any remarks or notes about completing this task..."
-              value={finishRemarks}
-              onChange={(e) => setFinishRemarks(e.target.value)}
-              rows={3}
-            />
+            {showMemberSelection && (
+              <div>
+                <label className="text-sm font-medium">Select Team Member:</label>
+                <Select value={finishingMember} onValueChange={setFinishingMember}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team member who is finishing this task" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {adminMembers.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{member.name}</span>
+                          <div className="flex items-center gap-2 ml-2 text-xs text-muted-foreground">
+                            <span>{member.mobile}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {member.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <label className="text-sm font-medium">Remarks (optional):</label>
+              <Textarea
+                placeholder="Add any remarks or notes about completing this task..."
+                value={finishRemarks}
+                onChange={(e) => setFinishRemarks(e.target.value)}
+                rows={3}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={cancelFinishing}>
