@@ -281,16 +281,24 @@ export const TodoList = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (newTaskAssignee === 'all_members') {
-        // Create single task assigned to all members
+        // Create individual tasks for each admin member
+        const { data: members, error: membersError } = await supabase
+          .from('admin_members')
+          .select('id');
+
+        if (membersError) throw membersError;
+
+        const memberTasks = (members || []).map(member => ({
+          text: singleTaskText,
+          status: 'unfinished',
+          remarks: null,
+          created_by: user?.id || null,
+          assigned_to: member.id
+        }));
+
         const { error } = await supabase
           .from('todos')
-          .insert([{
-            text: singleTaskText,
-            status: 'unfinished',
-            remarks: null,
-            created_by: user?.id || null,
-            assigned_to: 'all_members'
-          }]);
+          .insert(memberTasks);
 
         if (error) throw error;
         
@@ -299,7 +307,7 @@ export const TodoList = () => {
         await loadTasks();
         toast({
           title: "Success",
-          description: `Task assigned to all team members successfully`,
+          description: `Task assigned to all ${members?.length || 0} team members successfully`,
         });
       } else {
         const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
@@ -344,18 +352,30 @@ export const TodoList = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (newTaskAssignee === 'all_members') {
-        // Create each task assigned to all members
-        const newTasks = taskTexts.map(text => ({
-          text,
-          status: 'unfinished' as const,
-          remarks: null,
-          created_by: user?.id || null,
-          assigned_to: 'all_members'
-        }));
+        // Get all admin members
+        const { data: members, error: membersError } = await supabase
+          .from('admin_members')
+          .select('id');
+
+        if (membersError) throw membersError;
+
+        // Create each task for each member
+        const allTasks = [];
+        for (const text of taskTexts) {
+          for (const member of (members || [])) {
+            allTasks.push({
+              text,
+              status: 'unfinished' as const,
+              remarks: null,
+              created_by: user?.id || null,
+              assigned_to: member.id
+            });
+          }
+        }
 
         const { error } = await supabase
           .from('todos')
-          .insert(newTasks);
+          .insert(allTasks);
 
         if (error) throw error;
         
@@ -364,7 +384,7 @@ export const TodoList = () => {
         await loadTasks();
         toast({
           title: "Success",
-          description: `${taskTexts.length} tasks assigned to all team members successfully`,
+          description: `${taskTexts.length} tasks assigned to all ${members?.length || 0} team members successfully`,
         });
       } else {
         const assignedTo = newTaskAssignee === 'unassigned' ? null : newTaskAssignee;
@@ -406,19 +426,10 @@ export const TodoList = () => {
     if (!task) return;
 
     if (task.status === 'unfinished') {
-      // Check if task is assigned to all members
-      if (task.assigned_to === 'all_members') {
-        // Show member selection dialog first
-        setFinishingTask(taskId);
-        setFinishRemarks(task.remarks || '');
-        setShowMemberSelection(true);
-        setFinishingMember('');
-      } else {
-        // Show popup for remarks when finishing
-        setFinishingTask(taskId);
-        setFinishRemarks(task.remarks || '');
-        setShowMemberSelection(false);
-      }
+      // Show popup for remarks when finishing
+      setFinishingTask(taskId);
+      setFinishRemarks(task.remarks || '');
+      setShowMemberSelection(false);
     } else {
       // Mark as unfinished
       updateTaskStatus(taskId, 'unfinished', task.remarks || '');

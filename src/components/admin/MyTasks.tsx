@@ -166,7 +166,7 @@ export const MyTasks = ({
 
         // For team members (admin_members table), show assigned tasks
         if (userTable === 'admin_members') {
-          query = query.filter('assigned_to', 'eq', userId);
+          query = query.or(`assigned_to.eq.${userId},assigned_to.eq.all_members`);
         }
         // For coordinators, show tasks reassigned to them
         else if (userRole === 'coordinator') {
