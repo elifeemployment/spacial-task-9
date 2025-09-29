@@ -26,6 +26,7 @@ interface Task {
   assigned_to?: string | null;
   reassigned_to_coordinator?: string | null;
   reassigned_to_supervisor?: string | null;
+  assigned_to_all_members?: boolean;
   reassigned_coordinator?: {
     id: string;
     name: string;
@@ -75,11 +76,23 @@ function TaskItem({
   onFinishTask
 }: TaskItemProps) {
   const isRequested = task.status !== 'finished' && (task.remarks?.toLowerCase().includes('requested completion') ?? false);
-  return <div className={`flex items-start justify-between gap-3 p-3 rounded-lg border mb-2 ${isRequested ? 'bg-orange-50 border-orange-200' : 'bg-card'}`}>
+  const isAllMembersTask = task.assigned_to_all_members;
+  return <div className={`flex items-start justify-between gap-3 p-3 rounded-lg border mb-2 ${
+    isRequested ? 'bg-orange-50 border-orange-200' : 
+    isAllMembersTask ? 'bg-blue-50 border-blue-200' : 
+    'bg-card'
+  }`}>
       <div className="flex items-start gap-3 flex-1">
         {task.status === 'finished' ? <CheckCircle className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5 text-muted-foreground" />}
         <div className="flex-1">
-          <p className="font-medium text-foreground">{task.text}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-foreground">{task.text}</p>
+            {isAllMembersTask && (
+              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                All Members
+              </Badge>
+            )}
+          </div>
           {task.remarks && <p className="text-sm text-muted-foreground mt-1">{task.remarks}</p>}
           {(task.reassigned_coordinator || task.reassigned_supervisor) && <div className="flex items-center gap-2 mt-2">
               <Badge variant="secondary" className="text-xs">
@@ -166,7 +179,7 @@ export const MyTasks = ({
 
         // For team members (admin_members table), show assigned tasks
         if (userTable === 'admin_members') {
-          query = query.or(`assigned_to.eq.${userId},assigned_to.eq.all_members`);
+          query = query.filter('assigned_to', 'eq', userId);
         }
         // For coordinators, show tasks reassigned to them
         else if (userRole === 'coordinator') {
@@ -224,6 +237,7 @@ export const MyTasks = ({
             assigned_to: taskAny.assigned_to || null,
             reassigned_to_coordinator: taskAny.reassigned_to_coordinator || null,
             reassigned_to_supervisor: taskAny.reassigned_to_supervisor || null,
+            assigned_to_all_members: taskAny.assigned_to_all_members || false,
             reassigned_coordinator,
             reassigned_supervisor,
             assigned_by

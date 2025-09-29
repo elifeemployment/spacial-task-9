@@ -26,6 +26,7 @@ interface Task {
   reassigned_to_coordinator?: string | null;
   reassigned_to_supervisor?: string | null;
   assigned_to_all?: boolean;
+  assigned_to_all_members?: boolean;
   finished_by_member_id?: string | null;
   assigned_member?: {
     id: string;
@@ -169,6 +170,7 @@ export const TodoList = () => {
               assigned_to: taskAny.assigned_to || null,
               reassigned_to_coordinator: taskAny.reassigned_to_coordinator || null,
               reassigned_to_supervisor: taskAny.reassigned_to_supervisor || null,
+              assigned_to_all_members: taskAny.assigned_to_all_members || false,
               assigned_member,
               reassigned_coordinator,
               reassigned_supervisor
@@ -293,7 +295,8 @@ export const TodoList = () => {
           status: 'unfinished',
           remarks: null,
           created_by: user?.id || null,
-          assigned_to: member.id
+          assigned_to: member.id,
+          assigned_to_all_members: true
         }));
 
         const { error } = await supabase
@@ -368,7 +371,8 @@ export const TodoList = () => {
               status: 'unfinished' as const,
               remarks: null,
               created_by: user?.id || null,
-              assigned_to: member.id
+              assigned_to: member.id,
+              assigned_to_all_members: true
             });
           }
         }
@@ -1190,12 +1194,19 @@ export const TodoList = () => {
                   ) : (
                     <div className="space-y-2">
                       {getTasksForDate(selectedDate).map((task) => (
-                        <Card key={task.id} className="p-3">
+                        <Card key={task.id} className={`p-3 ${task.assigned_to_all_members ? 'bg-blue-50 border-blue-200' : ''}`}>
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <span className={task.status === 'finished' ? 'line-through text-muted-foreground' : 'underline'}>
-                                {task.text}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={task.status === 'finished' ? 'line-through text-muted-foreground' : 'underline'}>
+                                  {task.text}
+                                </span>
+                                {task.assigned_to_all_members && (
+                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                                    All Members
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <Badge variant={
                                   task.status === 'finished' ? 'default' : 
@@ -1307,7 +1318,7 @@ export const TodoList = () => {
                         </TableHeader>
                         <TableBody>
                           {unfinishedTasks.map((task) => (
-                            <TableRow key={task.id}>
+                            <TableRow key={task.id} className={task.assigned_to_all_members ? 'bg-blue-50' : ''}>
                               <TableCell>
                                 <Checkbox
                                   checked={selectedTasks.includes(task.id)}
@@ -1339,8 +1350,13 @@ export const TodoList = () => {
                                      </Button>
                                    </div>
                                  ) : (
-                                   <div className="flex items-center gap-2">
-                                     <div className="font-medium underline">{task.text}</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="font-medium underline">{task.text}</div>
+                                      {task.assigned_to_all_members && (
+                                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                                          All Members
+                                        </Badge>
+                                      )}
                                      <Button 
                                        size="sm" 
                                        variant="ghost" 
@@ -1570,7 +1586,7 @@ export const TodoList = () => {
                         </TableHeader>
                         <TableBody>
                           {finishedTasks.map((task) => (
-                            <TableRow key={task.id}>
+                            <TableRow key={task.id} className={task.assigned_to_all_members ? 'bg-blue-50' : ''}>
                               <TableCell>
                                 <Checkbox
                                   checked={selectedTasks.includes(task.id)}
@@ -1602,8 +1618,13 @@ export const TodoList = () => {
                                      </Button>
                                    </div>
                                  ) : (
-                                   <div className="flex items-center gap-2">
-                                     <div className="font-medium line-through text-muted-foreground">{task.text}</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="font-medium line-through text-muted-foreground">{task.text}</div>
+                                      {task.assigned_to_all_members && (
+                                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                                          All Members
+                                        </Badge>
+                                      )}
                                      <Button 
                                        size="sm" 
                                        variant="ghost" 
