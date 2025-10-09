@@ -26,6 +26,7 @@ interface PanchayathData {
   supervisor_count: number;
   group_leader_count: number;
   pro_count: number;
+  customer_count: number;
 }
 
 interface Agent {
@@ -76,6 +77,20 @@ export const PanchayathHierarchy = () => {
 
       if (error) throw error;
 
+      // Fetch customer counts separately
+      const { data: customersData } = await supabase
+        .from("customers")
+        .select("panchayath_id, customer_count");
+
+      // Calculate total customers per panchayath
+      const customersByPanchayath: Record<string, number> = {};
+      customersData?.forEach(c => {
+        if (!customersByPanchayath[c.panchayath_id]) {
+          customersByPanchayath[c.panchayath_id] = 0;
+        }
+        customersByPanchayath[c.panchayath_id] += c.customer_count || 0;
+      });
+
       const panchayathsWithCounts = data?.map(p => ({
         id: p.id,
         name: p.name,
@@ -84,6 +99,7 @@ export const PanchayathHierarchy = () => {
         supervisor_count: p.supervisors?.[0]?.count || 0,
         group_leader_count: p.group_leaders?.[0]?.count || 0,
         pro_count: p.pros?.[0]?.count || 0,
+        customer_count: customersByPanchayath[p.id] || 0,
       })) || [];
 
       setPanchayaths(panchayathsWithCounts);
@@ -469,6 +485,16 @@ export const PanchayathHierarchy = () => {
                                   </div>
                                   <div className="mt-2">
                                     <ProsByGroupLeader panchayathId={panchayath.id} />
+                                  </div>
+                                </div>
+
+                                <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-3 w-3 rounded-full bg-accent flex-shrink-0"></div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs text-muted-foreground">Total Customers</p>
+                                      <p className="font-semibold text-lg">{panchayath.customer_count}</p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
