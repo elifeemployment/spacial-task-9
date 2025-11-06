@@ -89,7 +89,6 @@ export const PanchayathForm = ({ officerId, onPanchayathCreated, editingPanchaya
           .insert({
             name: name.trim(),
             number_of_wards: wardCount,
-            created_by: officerId,
           })
           .select()
           .single();
