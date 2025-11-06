@@ -33,6 +33,11 @@ const Index = () => {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    // Redirect admin members to super admin panel
+    if (user.hasAdminAccess && user.role === 'admin_member') {
+      window.location.href = '/super-admin';
+    }
   };
   const handleLogout = () => {
     setCurrentUser(null);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +10,33 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminTeamManagement } from "@/components/admin/AdminTeamManagement";
 import { TestimonialManagementSimple } from "@/components/admin/TestimonialManagementSimple";
+import { User } from "@/lib/authService";
 
 const SuperAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("user-management");
+
+  // Check if user is already logged in as admin member
+  useEffect(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user.hasAdminAccess && user.role === 'admin_member') {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +71,15 @@ const SuperAdmin = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     setUsername("");
     setPassword("");
+    localStorage.removeItem('currentUser');
     toast({
       title: "Logged Out",
       description: "You have been logged out of Super Admin Panel",
     });
+    navigate("/");
   };
 
   if (!isAuthenticated) {
@@ -126,7 +147,7 @@ const SuperAdmin = () => {
                 Super Admin Panel
               </h1>
               <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                System-wide administration and control
+                {currentUser ? `Welcome, ${currentUser.name}` : 'System-wide administration and control'}
               </p>
             </div>
           </div>
