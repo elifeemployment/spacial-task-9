@@ -64,10 +64,17 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <UserProfile currentUser={currentUser} onUserUpdate={setCurrentUser} />
             
-            {/* Show Team Admin Panel button only for team members */}
-            {currentUser.hasAdminAccess && <Button variant="outline" onClick={() => window.location.href = '/admin'} className="w-full sm:w-auto border-primary/20 hover:border-primary">
-                Team Admin Panel
-              </Button>}
+            {/* Show Admin Panel buttons for team members */}
+            {currentUser.hasAdminAccess && (
+              <>
+                <Button variant="outline" onClick={() => window.location.href = '/admin'} className="w-full sm:w-auto border-primary/20 hover:border-primary">
+                  Team Admin Panel
+                </Button>
+                <Button variant="outline" onClick={() => window.location.href = '/super-admin'} className="w-full sm:w-auto border-purple-500/20 hover:border-purple-500 bg-purple-50 hover:bg-purple-100 text-purple-700">
+                  Super Admin Panel
+                </Button>
+              </>
+            )}
             
             {/* Show Reports button only for coordinators */}
             {currentUser.role === 'coordinator' && <Button variant="outline" onClick={() => setIsReportsOpen(!isReportsOpen)} className="w-full sm:w-auto border-blue-500/20 hover:border-blue-500 bg-blue-50 hover:bg-blue-100 text-blue-700 flex items-center gap-2">
