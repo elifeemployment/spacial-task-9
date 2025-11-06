@@ -90,54 +90,26 @@ export const AdminMemberForm = ({ teamId, member, onSuccess, onCancel }: AdminMe
 
     setLoading(true);
     try {
-      // Check for duplicate mobile number using simplified validation
+      // Check for duplicate mobile number
       const cleanMobile = mobile.replace(/\s/g, '');
       
-      // Check existing coordinators, supervisors, group_leaders, pros, and admin_members tables
-      const checkTables = ['coordinators', 'supervisors', 'group_leaders', 'pros'];
-      let isDuplicate = false;
-      let duplicateTable = '';
+      // Check admin_members table for duplicates
+      const { data: adminMemberData, error: adminMemberError } = await supabase
+        .from('admin_members')
+        .select('id')
+        .eq('mobile', cleanMobile);
 
-      for (const table of checkTables) {
-        const { data, error } = await supabase
-          .from(table as any)
-          .select('id')
-          .eq('mobile_number', cleanMobile)
-          .limit(1);
-
-        if (error) continue; // Skip if table doesn't exist or error
-        
-        if (data && data.length > 0) {
-          isDuplicate = true;
-          duplicateTable = table;
-          break;
+      if (!adminMemberError && adminMemberData && adminMemberData.length > 0) {
+        // If editing, exclude current member from duplicate check
+        if (!isEditing || adminMemberData.some(m => m.id !== member?.id)) {
+          toast({
+            title: "Error",
+            description: "This mobile number is already registered as an admin member",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
         }
-      }
-
-      // Also check admin_members table
-      if (!isDuplicate) {
-        const { data: adminMemberData, error: adminMemberError } = await supabase
-          .from('admin_members')
-          .select('id')
-          .eq('mobile', cleanMobile);
-
-        if (!adminMemberError && adminMemberData && adminMemberData.length > 0) {
-          // If editing, exclude current member from duplicate check
-          if (!isEditing || adminMemberData.some(m => m.id !== member?.id)) {
-            isDuplicate = true;
-            duplicateTable = 'admin_members';
-          }
-        }
-      }
-
-      if (isDuplicate) {
-        toast({
-          title: "Error",
-          description: `This mobile number is already registered in ${duplicateTable}`,
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
       }
 
       if (isEditing && member) {
