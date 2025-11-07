@@ -22,22 +22,6 @@ const SuperAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("user-management");
 
-  // Check if user is already logged in as admin member
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        if (user.hasAdminAccess && user.role === 'admin_member') {
-          setCurrentUser(user);
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-    }
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -74,7 +58,6 @@ const SuperAdmin = () => {
     setCurrentUser(null);
     setUsername("");
     setPassword("");
-    localStorage.removeItem('currentUser');
     toast({
       title: "Logged Out",
       description: "You have been logged out of Super Admin Panel",
@@ -147,7 +130,7 @@ const SuperAdmin = () => {
                 Super Admin Panel
               </h1>
               <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                {currentUser ? `Welcome, ${currentUser.name}` : 'System-wide administration and control'}
+                System-wide administration and control
               </p>
             </div>
           </div>

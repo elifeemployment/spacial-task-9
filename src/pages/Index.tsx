@@ -33,11 +33,6 @@ const Index = () => {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     localStorage.setItem('currentUser', JSON.stringify(user));
-    
-    // Redirect admin members to super admin panel
-    if (user.hasAdminAccess && user.role === 'admin_member') {
-      window.location.href = '/super-admin';
-    }
   };
   const handleLogout = () => {
     setCurrentUser(null);
@@ -64,16 +59,11 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <UserProfile currentUser={currentUser} onUserUpdate={setCurrentUser} />
             
-            {/* Show Admin Panel buttons for team members */}
+            {/* Show Admin Panel button for team members */}
             {currentUser.hasAdminAccess && (
-              <>
-                <Button variant="outline" onClick={() => window.location.href = '/admin'} className="w-full sm:w-auto border-primary/20 hover:border-primary">
-                  Team Admin Panel
-                </Button>
-                <Button variant="outline" onClick={() => window.location.href = '/super-admin'} className="w-full sm:w-auto border-purple-500/20 hover:border-purple-500 bg-purple-50 hover:bg-purple-100 text-purple-700">
-                  Super Admin Panel
-                </Button>
-              </>
+              <Button variant="outline" onClick={() => window.location.href = '/admin'} className="w-full sm:w-auto border-primary/20 hover:border-primary">
+                Team Admin Panel
+              </Button>
             )}
             
             {/* Show Reports button only for coordinators */}
