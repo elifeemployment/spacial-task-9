@@ -23,6 +23,32 @@ export interface AuthResult {
 export const findUserByMobile = async (mobile: string): Promise<AuthResult> => {
   const cleanMobile = mobile.trim();
   
+  // Check admin_members first (team members with admin access)
+  try {
+    const { data: adminMembersData, error: adminMembersError } = await supabase
+      .from('admin_members')
+      .select('id, name, mobile')
+      .eq('mobile', cleanMobile)
+      .limit(1);
+    
+    if (!adminMembersError && adminMembersData && adminMembersData.length > 0) {
+      const user = adminMembersData[0];
+      return {
+        success: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          mobile_number: user.mobile,
+          role: 'admin_member',
+          table: 'admin_members',
+          hasAdminAccess: true
+        }
+      };
+    }
+  } catch (error) {
+    console.error('Error checking admin_members table:', error);
+  }
+
   // Check coordinators table
   try {
     const { data: coordinatorsData, error: coordinatorsError } = await supabase
@@ -132,31 +158,7 @@ export const findUserByMobile = async (mobile: string): Promise<AuthResult> => {
     console.error('Error checking pros table:', error);
   }
 
-  // Check admin_members table (team members with admin access)
-  try {
-    const { data: adminMembersData, error: adminMembersError } = await supabase
-      .from('admin_members')
-      .select('id, name, mobile')
-      .eq('mobile', cleanMobile)
-      .limit(1);
-    
-    if (!adminMembersError && adminMembersData && adminMembersData.length > 0) {
-      const user = adminMembersData[0];
-      return {
-        success: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          mobile_number: user.mobile,
-          role: 'admin_member',
-          table: 'admin_members',
-          hasAdminAccess: true
-        }
-      };
-    }
-  } catch (error) {
-    console.error('Error checking admin_members table:', error);
-  }
+  // admin_members already checked above
 
   return {
     success: false,
