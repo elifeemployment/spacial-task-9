@@ -576,6 +576,7 @@ export type Database = {
       todos: {
         Row: {
           assigned_to: string | null
+          assigned_to_all_members: boolean | null
           created_at: string
           created_by: string | null
           finished_at: string | null
@@ -589,6 +590,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          assigned_to_all_members?: boolean | null
           created_at?: string
           created_by?: string | null
           finished_at?: string | null
@@ -602,6 +604,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          assigned_to_all_members?: boolean | null
           created_at?: string
           created_by?: string | null
           finished_at?: string | null
