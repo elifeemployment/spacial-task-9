@@ -46,12 +46,21 @@ export const SupervisorForm = ({ selectedPanchayath: preSelectedPanchayath, edit
     if (editingSupervisor) {
       setName(editingSupervisor.name);
       setMobile(editingSupervisor.mobile_number);
-      setCoordinatorId(editingSupervisor.coordinator_id);
       setPanchayathId(editingSupervisor.panchayath_id);
       // Fetch supervisor wards
       fetchSupervisorWards(editingSupervisor.id);
     }
   }, [editingSupervisor]);
+
+  // Set coordinator after coordinators are loaded when editing
+  useEffect(() => {
+    if (editingSupervisor && coordinators.length > 0) {
+      const existingCoordinator = coordinators.find(c => c.id === editingSupervisor.coordinator_id);
+      if (existingCoordinator) {
+        setCoordinatorId(editingSupervisor.coordinator_id);
+      }
+    }
+  }, [editingSupervisor, coordinators]);
 
   const fetchSupervisorWards = async (supervisorId: string) => {
     try {
