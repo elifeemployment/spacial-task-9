@@ -157,9 +157,9 @@ const SuperAdmin = () => {
             </div>
             <CardTitle className="text-2xl font-bold">Super Admin Login</CardTitle>
             <CardDescription>
-              {otpSent 
-                ? "Enter the verification code sent to your email" 
-                : "Enter your email to receive a verification code"}
+            {otpSent 
+                ? "Click the link sent to your email to login" 
+                : "Enter your email to receive a login link"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,47 +187,32 @@ const SuperAdmin = () => {
                       Sending...
                     </>
                   ) : (
-                    "Send Verification Code"
+                    "Send Login Link"
                   )}
                 </Button>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="otp">Verification Code</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 6-digit code"
-                    className="text-center text-lg tracking-widest"
-                    maxLength={6}
-                    required
-                  />
+              <div className="space-y-4 text-center">
+                <div className="p-4 bg-muted rounded-lg">
+                  <Mail className="h-12 w-12 mx-auto text-primary mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    We've sent a login link to <strong>{email}</strong>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Click the link in your email to sign in. This page will update automatically.
+                  </p>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    "Verify & Login"
-                  )}
-                </Button>
                 <Button 
                   type="button" 
-                  variant="ghost" 
+                  variant="outline" 
                   className="w-full" 
                   onClick={() => {
                     setOtpSent(false);
-                    setOtp("");
                   }}
                 >
-                  Change Email
+                  Use Different Email
                 </Button>
-              </form>
+              </div>
             )}
             <div className="mt-4 text-center">
               <Button variant="link" onClick={() => navigate("/")} className="text-sm">
