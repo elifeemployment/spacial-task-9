@@ -75,9 +75,6 @@ const TeamAdmin = () => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: {
-          shouldCreateUser: false,
-        },
       });
 
       if (error) {

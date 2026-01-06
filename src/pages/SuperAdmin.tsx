@@ -59,9 +59,6 @@ const SuperAdmin = () => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: {
-          shouldCreateUser: false, // Only allow existing users
-        },
       });
 
       if (error) {
