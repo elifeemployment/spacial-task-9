@@ -4,12 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Shield, Users, MessageSquare, Mail, Loader2 } from "lucide-react";
+import { ArrowLeft, Shield, Users, MessageSquare, Mail, Loader2, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminTeamManagement } from "@/components/admin/AdminTeamManagement";
 import { TestimonialManagementSimple } from "@/components/admin/TestimonialManagementSimple";
+import { TeamAdminManagement } from "@/components/admin/TeamAdminManagement";
 import { User as AuthUser, Session } from "@supabase/supabase-js";
 
 const SuperAdmin = () => {
@@ -250,7 +251,7 @@ const SuperAdmin = () => {
         </div>
 
         {/* Admin Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div 
             className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "user-management" ? "scale-[1.02]" : ""}`} 
             onClick={() => setActiveTab("user-management")}
@@ -263,6 +264,23 @@ const SuperAdmin = () => {
                 </div>
                 <CardDescription>
                   Manage all system users and roles
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+
+          <div 
+            className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${activeTab === "team-admin-control" ? "scale-[1.02]" : ""}`} 
+            onClick={() => setActiveTab("team-admin-control")}
+          >
+            <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${activeTab === "team-admin-control" ? "border-primary shadow-xl bg-primary/10" : "border-border hover:border-primary/50 hover:shadow-lg"}`}>
+              <CardHeader className="pb-3 bg-green-50">
+                <div className="flex items-center gap-2">
+                  <UserCog className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Team Admin Control</CardTitle>
+                </div>
+                <CardDescription>
+                  Approve, edit, activate/deactivate admins
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -332,6 +350,10 @@ const SuperAdmin = () => {
           
           <TabsContent value="user-management">
             <AdminTeamManagement />
+          </TabsContent>
+
+          <TabsContent value="team-admin-control">
+            <TeamAdminManagement />
           </TabsContent>
 
           <TabsContent value="testimonials">
