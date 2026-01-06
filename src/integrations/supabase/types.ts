@@ -19,6 +19,8 @@ export type Database = {
           admin_type: string | null
           created_at: string | null
           id: string
+          is_active: boolean | null
+          is_approved: boolean | null
           mobile: string
           name: string
           panchayath: string
@@ -30,6 +32,8 @@ export type Database = {
           admin_type?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
           mobile: string
           name: string
           panchayath: string
@@ -41,6 +45,8 @@ export type Database = {
           admin_type?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
           mobile?: string
           name?: string
           panchayath?: string
